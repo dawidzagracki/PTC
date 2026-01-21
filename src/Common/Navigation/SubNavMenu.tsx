@@ -303,7 +303,12 @@ export default function SubNavMenu() {
             <ListItemText primary="Academy Account Settings" />
           </MenuItem>
         </Box>
-        <MenuItem onClick={handleProfileMenuClose}>
+        <MenuItem
+          onClick={() => {
+            navigate("/library", { state: { showFavourites: true } });
+            handleProfileMenuClose();
+          }}
+        >
           <ListItemIcon>
             <FavoriteBorderIcon fontSize="small" sx={{ color: "#A6FA12" }} />
           </ListItemIcon>

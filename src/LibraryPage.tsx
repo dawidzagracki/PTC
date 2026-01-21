@@ -37,7 +37,7 @@ import {
   toggleModuleFavourite,
   type FilteredModuleListItem,
 } from "./Services/ModulesService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PathsLibraryPage from "./PathsLibraryPage";
 import CertsLibraryPage from "./CertsLibraryPage";
 
@@ -427,8 +427,11 @@ function ModuleCard({
 }
 
 export default function LibraryPage() {
+  const location = useLocation();
   const [alignment, setAlignment] = useState("modules");
-  const [moduleToggle, setModuleToggle] = useState(false);
+  const [moduleToggle, setModuleToggle] = useState(
+    (location.state as { showFavourites?: boolean })?.showFavourites ?? false
+  );
   const [modules, setModules] = useState<FilteredModuleListItem[]>([]);
 
   // Stan filtrów
