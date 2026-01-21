@@ -4,4 +4,5 @@ export interface AuthResponse {
   userName: string;
   fullName: string;
   email: string;
+  isEmailConfirmed: boolean;
 }

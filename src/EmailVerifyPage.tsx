@@ -8,21 +8,13 @@ import {
   createTheme,
 } from "@mui/material";
 
-// Kolory zbliżone do HTB
 const theme = createTheme({
   palette: {
     mode: "dark",
-    background: {
-      default: "#0A0F1E", // tło strony
-      paper: "#101927", // tło kart
-    },
-    text: {
-      primary: "#E6F1FF",
-      secondary: "#99A3B3",
-    },
-    primary: {
-      main: "#A6FA12", // limonkowy
-    },
+    primary: { main: "#9AF80B" },
+    secondary: { main: "#00D1FF" },
+    background: { default: "#101927", paper: "#1a2332" },
+    text: { primary: "#E6F1FF", secondary: "#99A3B3" },
   },
   typography: {
     fontFamily: [
@@ -35,6 +27,24 @@ const theme = createTheme({
       "Arial",
       "sans-serif",
     ].join(","),
+    h1: {
+      fontWeight: 900,
+      letterSpacing: 0.2,
+      fontSize: "clamp(32px, 6.5vw, 72px)",
+      lineHeight: 1.05,
+    },
+    button: { textTransform: "none", fontWeight: 700 },
+  },
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: { background: "transparent", boxShadow: "none" },
+      },
+    },
+    MuiButton: { styleOverrides: { containedPrimary: { color: "#0A0F1E" } } },
+    MuiContainer: {
+      styleOverrides: { root: { paddingLeft: 16, paddingRight: 16 } },
+    },
   },
 });
 

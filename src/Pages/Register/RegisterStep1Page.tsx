@@ -10,12 +10,13 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-import { Terminal, WorkOutline, Language } from "@mui/icons-material";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { AuthService } from "../../Services/AuthService";
+import GoogleIcon from "@mui/icons-material/Google";
 
-// Colors matched to the HTB style used earlier
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -63,6 +64,22 @@ export default function RegisterStep1Page() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const isEmailValid = /\S+@\S+\.\S+/.test(email);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const result = await AuthService.googleLogin(tokenResponse.access_token);
+      if (result) {
+        console.log(result);
+        localStorage.setItem("accessToken", result.accessToken);
+        localStorage.setItem("accessTokenExpiresAt", result.expiresAt);
+        localStorage.setItem("email", result.email);
+        localStorage.setItem("fullName", result.fullName);
+        localStorage.setItem("username", result.userName);
+        navigate("/dashboard");
+      }
+    },
+    onError: () => console.log("Google Login Failed"),
+  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -158,26 +175,15 @@ export default function RegisterStep1Page() {
               <Button
                 fullWidth
                 variant="outlined"
-                startIcon={<Language />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
+                startIcon={<GoogleIcon />}
+                sx={{
+                  borderColor: "rgba(255, 255, 255, 0.55)",
+                  borderRadius: 1,
+                  color: "white",
+                }}
+                onClick={() => googleLogin()}
               >
                 Sign in with Google
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<WorkOutline />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
-              >
-                Sign in with LinkedIn
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Terminal />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
-              >
-                Sign in with GitHub
               </Button>
             </Stack>
 

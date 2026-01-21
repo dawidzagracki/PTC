@@ -18,6 +18,9 @@ import { getAllPaths, type PathListItemDto } from "./Services/PathsService";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import LayersIcon from "@mui/icons-material/Layers";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import valueImg from "./assets/cyberchip.png";
+import { useNavigate } from "react-router-dom";
 
 const C = {
   bg: "#0A0F1E",
@@ -71,7 +74,10 @@ let theme = createTheme({
 theme = responsiveFontSizes(theme);
 
 export default function PathsPage() {
+  const navigate = useNavigate();
+  const [type, setType] = useState<string>("2");
   const [paths, setPaths] = useState<PathListItemDto[]>([]);
+  const [basicPaths, setBasicPaths] = useState<PathListItemDto[]>([]);
   const [showModules, setShowModules] = useState(false);
 
   useEffect(() => {
@@ -81,8 +87,20 @@ export default function PathsPage() {
   async function fetchPaths() {
     await getAllPaths().then((paths) => {
       setPaths(paths);
+      setBasicPaths(paths);
       console.log(paths);
     });
+  }
+
+  function fliterPaths(filterType: string) {
+    setType(filterType);
+    const boolPathType =
+      filterType == "0" ? false : filterType == "1" ? true : "2";
+    if (boolPathType !== "2") {
+      setPaths(basicPaths.filter((path) => path.type === boolPathType));
+    } else {
+      setPaths(basicPaths);
+    }
   }
 
   return (
@@ -148,9 +166,12 @@ export default function PathsPage() {
                 fontSize: 14,
                 px: 5,
                 borderRadius: 1.5,
-                bgcolor: C.lime,
-                color: "#101927",
-                "&:hover": { bgcolor: "#b7ff2a" },
+                bgcolor: type === "2" ? C.lime : "transparent",
+                color: type === "2" ? "#101927" : C.textDim,
+                "&:hover": { bgcolor: "#b8ff2a2c", color: "#101927" },
+              }}
+              onClick={() => {
+                fliterPaths("2");
               }}
             >
               All
@@ -164,7 +185,12 @@ export default function PathsPage() {
                 fontSize: 14,
                 px: 5,
                 borderRadius: 1.5,
-                color: C.textDim,
+                bgcolor: type === "0" ? C.lime : "transparent",
+                color: type === "0" ? "#101927" : C.textDim,
+                "&:hover": { bgcolor: "#b8ff2a2c", color: "#101927" },
+              }}
+              onClick={() => {
+                fliterPaths("0");
               }}
             >
               Job Role Paths
@@ -178,7 +204,12 @@ export default function PathsPage() {
                 width: "25%",
                 px: 5,
                 borderRadius: 1.5,
-                color: C.textDim,
+                bgcolor: type === "1" ? C.lime : "transparent",
+                color: type === "1" ? "#101927" : C.textDim,
+                "&:hover": { bgcolor: "#b8ff2a2c", color: "#101927" },
+              }}
+              onClick={() => {
+                fliterPaths("1");
               }}
             >
               Skill Paths
@@ -202,7 +233,7 @@ export default function PathsPage() {
             Both Job Role and Skill Paths are presented here.
           </Typography>
           {/* MAIN CARD */}
-          {paths.map((item, index) => (
+          {paths.map((item, index: number) => (
             <Box
               sx={{
                 bgcolor: "background.paper",
@@ -210,6 +241,7 @@ export default function PathsPage() {
                 justifyContent: "center",
                 flexDirection: "column",
                 borderRadius: 2,
+                position: "relative",
               }}
               key={index}
             >
@@ -247,24 +279,28 @@ export default function PathsPage() {
 
                 {/* RIGHT – tekst ścieżki */}
 
-                <Box sx={{ flex: 1, p: 4 }} key={index}>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      letterSpacing: 3,
-                      color: C.textDim,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {item.name}
-                  </Typography>
-
+                <Box sx={{ flex: 1, p: 4, pl: 0 }} key={index}>
                   <Typography
                     variant="h5"
+                    onClick={() =>
+                      navigate(`/path-overview/${item.slug}`, {
+                        state: {
+                          description: item.description,
+                          difficulty: item.difficulty,
+                          totalPrice: item.totalPrice,
+                          totalReward: item.totalReward,
+                          totalSectionsCount: item.totalSectionsCount,
+                          name: item.name,
+                          modulesCount: item.modulesCount,
+                          modules: item.modules,
+                        },
+                      })
+                    }
                     sx={{
                       fontWeight: 900,
                       mt: 1,
                       mb: 2,
+                      cursor: "pointer",
                       fontSize: "clamp(22px, 2.3vw, 30px)",
                     }}
                   >
@@ -307,26 +343,36 @@ export default function PathsPage() {
                       sx={{ color: C.textDim, alignItems: "center" }}
                       width="100%"
                     >
-                      <Stack spacing={0.3}>
-                        <Typography variant="caption">Sections</Typography>
+                      <Stack spacing={0.5} direction="row" alignItems="center">
+                        <FormatListBulletedIcon />
                         <Typography variant="body2" sx={{ color: C.text }}>
                           {item.totalSectionsCount} Sections
                         </Typography>
                       </Stack>
-                      <Stack spacing={0.3}>
-                        <Typography variant="caption">Required</Typography>
+                      <Stack direction="row" alignItems="center">
+                        <img src={valueImg} width={40} />
                         <Typography variant="body2" sx={{ color: C.text }}>
-                          {item.totalPrice}
+                          Required: {item.totalPrice}
                         </Typography>
                       </Stack>
-                      <Stack spacing={0.3}>
-                        <Typography variant="caption">Reward</Typography>
+                      <Stack direction="row" alignItems="center">
+                        <img src={valueImg} width={40} />
                         <Typography variant="body2" sx={{ color: C.text }}>
-                          +330
+                          Reward: {item.totalReward}
                         </Typography>
                       </Stack>
                       <Box sx={{ flexGrow: 1 }} />
-                      <Stack direction="row" alignItems="center">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexDirection: "row",
+                          position: "absolute",
+                          down: 15,
+                          right: 30,
+                        }}
+                      >
                         <LayersIcon />
                         <Button
                           onClick={() => setShowModules(!showModules)}
@@ -337,19 +383,20 @@ export default function PathsPage() {
                               <KeyboardArrowDownIcon />
                             )
                           }
+                          sx={{ width: "100%" }}
                         >
                           <Typography variant="body2" sx={{ color: C.text }}>
                             {item.modulesCount} Modules included
                           </Typography>
                         </Button>
-                      </Stack>
+                      </Box>
                     </Stack>
                   </Box>
                 </Box>
               </Box>
 
               {showModules && item.modules && (
-                <Box sx={{ width: "100%", mt: 2 }}>
+                <Box sx={{ width: "100%" }}>
                   {item.modules.map((mod, i) => (
                     <Box
                       key={i}
@@ -362,32 +409,59 @@ export default function PathsPage() {
                         flexDirection: "column",
                         gap: 1.5,
                         p: 3,
-                        mb: 2,
+                        mb: 3,
                         bgcolor: "background.paper",
                       }}
                     >
-                      {/* TYTUŁ MODUŁU */}
                       <Typography sx={{ fontWeight: 700, fontSize: 18 }}>
                         {mod.moduleName}
                       </Typography>
-
-                      {/* GÓRNY RZĄD PARAMETRÓW */}
                       <Box
-                        sx={{ display: "flex", flexDirection: "row", gap: 4 }}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "row",
+                          gap: 2,
+                          alignItems: "center",
+                        }}
                       >
-                        <Typography sx={{ color: C.textDim }}>
-                          {mod.difficulty}
-                        </Typography>
-                        <Typography sx={{ color: C.textDim }}>
-                          {mod.sectionsCount} Sections
-                        </Typography>
-                        <Typography sx={{ color: C.textDim }}>
-                          Reward: +{mod.rewardAmount}
-                        </Typography>
+                        <Chip
+                          label={mod.difficulty}
+                          sx={{
+                            bgcolor: "#78f84544",
+                            color: "#54f734ff",
+                            fontWeight: 700,
+                            borderRadius: 1,
+                            height: 26,
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            flexDirection: "row",
+                          }}
+                        >
+                          <FormatListBulletedIcon />
+                          <Typography sx={{ color: C.textDim }}>
+                            {mod.sectionsCount} Sections
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            flexDirection: "row",
+                          }}
+                        >
+                          <img src={valueImg} width={35} />
+                          <Typography sx={{ color: C.textDim }}>
+                            Reward: +{mod.rewardAmount}
+                          </Typography>
+                        </Box>
                       </Box>
-
-                      {/* OPIS */}
-                      <Typography sx={{ color: C.textDim }}>
+                      <Typography sx={{ color: C.textDim, fontWeight: 500 }}>
                         {mod.moduleDescription}
                       </Typography>
                     </Box>

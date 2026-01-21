@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Container,
   CssBaseline,
   Divider,
   LinearProgress,
@@ -13,7 +12,6 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 
 const theme = createTheme({
   palette: {
@@ -68,7 +66,7 @@ export default function OnBoardingPage() {
 
   const toggleOption = (label: string) => {
     setSelected((prev) =>
-      prev.includes(label) ? prev.filter((x) => x !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter((x) => x !== label) : [...prev, label],
     );
   };
 
@@ -83,17 +81,26 @@ export default function OnBoardingPage() {
           alignItems: "center",
           justifyContent: "center",
           py: 6,
+          px: 2,
         }}
       >
-        <Container maxWidth="lg">
-          <Grid container spacing={4}>
-            {/* LEWA KOLUMNA */}
-            <Grid columns={{ xs: 12, md: 7 }}>
+        <Box sx={{ width: "100%", maxWidth: "lg" }}>
+          {/* ZAMIANA GRID NA BOX Z FLEXBOXEM */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" }, // Na mobile pionowo, na md poziomo
+              gap: 4, // Odpowiednik spacing={4} w Grid
+              alignItems: "flex-start",
+            }}
+          >
+            {/* LEWA KOLUMNA - SZERSZA (flex: 2) */}
+            <Box sx={{ flex: 2, width: "100%", mr: { md: 3 } }}>
               <Typography
                 variant="h5"
                 sx={{ fontWeight: 600, mb: 1, letterSpacing: 0.4 }}
               >
-                Why have you joined Hack The Box?
+                Why have you joined Path The Code?
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Select one or more options
@@ -148,10 +155,36 @@ export default function OnBoardingPage() {
                   );
                 })}
               </Stack>
-            </Grid>
+              <Box sx={{ mt: 6, display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  variant="text"
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: 13,
+                    px: 0,
+                    "&:hover": { bgcolor: "transparent", color: "#ffffff" },
+                    mr: 4,
+                  }}
+                >
+                  Skip onboarding
+                </Button>
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#233048",
+                    color: "#ffffff",
+                    px: 3.5,
+                    py: 0.75,
+                    "&:hover": { bgcolor: "#2b3a54" },
+                  }}
+                >
+                  Continue
+                </Button>
+              </Box>
+            </Box>
 
-            {/* PRAWA KOLUMNA */}
-            <Grid columns={{ xs: 12, md: 5 }}>
+            {/* PRAWA KOLUMNA - WĘŻSZA (flex: 1) */}
+            <Box sx={{ flex: 1, width: "100%", minWidth: { md: "320px" } }}>
               <Stack spacing={2.5}>
                 {/* GÓRNY BOX – Unlock module */}
                 <Paper
@@ -163,7 +196,6 @@ export default function OnBoardingPage() {
                     p: 2.5,
                   }}
                 >
-                  {/* mała „ikona” zamiast grafiki */}
                   <Box
                     sx={{
                       width: 40,
@@ -271,44 +303,9 @@ export default function OnBoardingPage() {
                   </Typography>
                 </Paper>
               </Stack>
-            </Grid>
-          </Grid>
-
-          {/* DOLNY PASEK PRZYCISKÓW */}
-          <Box
-            sx={{
-              mt: 4,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Button
-              variant="text"
-              sx={{
-                color: "text.secondary",
-                fontSize: 13,
-                px: 0,
-                "&:hover": { bgcolor: "transparent", color: "#ffffff" },
-              }}
-            >
-              Skip onboarding
-            </Button>
-
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "#233048",
-                color: "#ffffff",
-                px: 3.5,
-                py: 0.75,
-                "&:hover": { bgcolor: "#2b3a54" },
-              }}
-            >
-              Continue
-            </Button>
+            </Box>
           </Box>
-        </Container>
+        </Box>
       </Box>
     </ThemeProvider>
   );

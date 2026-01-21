@@ -11,6 +11,12 @@ import {
 } from "@mui/material";
 import MainNavMenu from "./Common/Navigation/MainNavMenu";
 import InfoBar from "./Common/InfoBar";
+import { useEffect, useState } from "react";
+import {
+  getCertificates,
+  type CertificateListItemDto,
+} from "./Services/CertificatesService";
+import { useNavigate } from "react-router-dom";
 
 const COLORS = {
   pageBg: "#0A0F1E",
@@ -64,6 +70,19 @@ let theme = createTheme({
 theme = responsiveFontSizes(theme);
 
 export default function CertificationsPage() {
+  const [certificates, setCertificates] = useState<CertificateListItemDto[]>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchCertificates();
+  }, []);
+
+  async function fetchCertificates() {
+    await getCertificates().then((certs) => {
+      setCertificates(certs);
+    });
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -113,167 +132,165 @@ export default function CertificationsPage() {
             bezpieczeństwa.
           </Typography>
         </Box>
+
         <Container maxWidth="xl">
           {/* Main certification card */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              bgcolor: "background.paper",
-              borderRadius: 3,
-              border: `1px solid ${COLORS.border}`,
-              overflow: "hidden",
-            }}
-          >
-            {/* LEFT: miejsce po ilustracji (placeholder, bez grafiki) */}
+          {certificates?.map((item, index) => (
             <Box
               sx={{
-                flexBasis: { md: "42%" },
-                minHeight: 340,
-                background:
-                  "radial-gradient(circle at 20% 20%, #ff5b5b 0, transparent 55%)," +
-                  "radial-gradient(circle at 80% 80%, #377DFF 0, transparent 55%)," +
-                  "linear-gradient(135deg, #1b2740 0%, #111827 60%, #1b2740 100%)",
-              }}
-            />
-
-            {/* RIGHT: opis certyfikatu */}
-            <Box
-              sx={{
-                flex: 1,
-                px: { xs: 3, md: 5 },
-                py: { xs: 3, md: 4 },
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: { xs: "column", md: "row" },
+                bgcolor: "background.paper",
+                borderRadius: 3,
+                border: `1px solid ${COLORS.border}`,
+                overflow: "hidden",
               }}
+              key={index}
             >
-              {/* Overline */}
-              <Typography
+              <Box
                 sx={{
-                  letterSpacing: 4,
-                  textTransform: "uppercase",
-                  color: COLORS.textMuted,
-                  fontSize: 13,
-                  mb: 2,
+                  flexBasis: { md: "42%" },
+                  minHeight: 340,
+                  background:
+                    "radial-gradient(circle at 20% 20%, #ff5b5b 0, transparent 55%)," +
+                    "radial-gradient(circle at 80% 80%, #377DFF 0, transparent 55%)," +
+                    "linear-gradient(135deg, #1b2740 0%, #111827 60%, #1b2740 100%)",
+                }}
+              />
+              {/* RIGHT: opis certyfikatu */}
+              <Box
+                sx={{
+                  flex: 1,
+                  px: { xs: 3, md: 5 },
+                  py: { xs: 3, md: 4 },
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                HTB Certified
-              </Typography>
-
-              {/* Title */}
-              <Typography
-                sx={{
-                  fontWeight: 900,
-                  fontSize: { xs: "1.9rem", md: "2.4rem" },
-                  lineHeight: 1.1,
-                  mb: 3,
-                }}
-              >
-                Junior Cybersecurity Associate
-              </Typography>
-
-              {/* Body text */}
-              <Typography
-                sx={{
-                  color: COLORS.textMuted,
-                  fontSize: { xs: 14, md: 15 },
-                  maxWidth: 900,
-                  mb: 4,
-                }}
-              >
-                Ten certyfikat potwierdza podstawowe umiejętności techniczne w
-                obszarze cyberbezpieczeństwa – zarówno ofensywnego, jak i
-                defensywnego. Uczestnik uczy się identyfikować typowe luki,
-                wykonywać podstawową analizę powłamaniową, monitorować sieci i
-                reagować na incydenty, pracując w środowisku zbliżonym do
-                rzeczywistych warunków pracy.
-              </Typography>
-
-              {/* Bottom info row */}
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                spacing={{ xs: 3, md: 4 }}
-                sx={{
-                  borderTop: `1px solid ${COLORS.border}`,
-                  pt: 3,
-                  mt: "auto",
-                  alignItems: { xs: "flex-start", md: "center" },
-                }}
-              >
-                {/* Col 1 */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
-                  >
-                    Related Job Role Path
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-                    Junior Cybersecurity Analyst &gt;
-                  </Typography>
-                </Box>
-
-                {/* Col 2 */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
-                  >
-                    Covers
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-                    20 Modules
-                  </Typography>
-                </Box>
-
-                {/* Col 3 */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
-                  >
-                    Exam Vouchers Required
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-                    1 Voucher
-                  </Typography>
-                </Box>
-
-                {/* Col 4 – price + button */}
-                <Stack
-                  direction={{ xs: "row", md: "column" }}
-                  spacing={1.5}
-                  sx={{ alignItems: { xs: "center", md: "flex-end" } }}
+                {/* Overline */}
+                <Typography
+                  sx={{
+                    letterSpacing: 4,
+                    textTransform: "uppercase",
+                    color: COLORS.textMuted,
+                    fontSize: 13,
+                    mb: 2,
+                  }}
                 >
-                  <Box>
+                  PTC Certified
+                </Typography>
+
+                {/* Title */}
+                <Typography
+                  sx={{
+                    fontWeight: 900,
+                    fontSize: { xs: "1.9rem", md: "2.4rem" },
+                    lineHeight: 1.1,
+                    mb: 3,
+                  }}
+                >
+                  {item.name}
+                </Typography>
+
+                {/* Body text */}
+                <Typography
+                  sx={{
+                    color: COLORS.textMuted,
+                    fontSize: { xs: 14, md: 15 },
+                    maxWidth: 900,
+                    mb: 4,
+                  }}
+                >
+                  {item.description}
+                </Typography>
+
+                {/* Bottom info row */}
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={{ xs: 3, md: 4 }}
+                  sx={{
+                    borderTop: `1px solid ${COLORS.border}`,
+                    pt: 3,
+                    mt: "auto",
+                    alignItems: { xs: "flex-start", md: "center" },
+                  }}
+                >
+                  {/* Col 1 */}
+                  <Box sx={{ flex: 1 }}>
                     <Typography
                       sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
                     >
-                      Get certified for
+                      Related Job Role Path
                     </Typography>
-                    <Typography
-                      sx={{
-                        fontWeight: 900,
-                        fontSize: 32,
-                        lineHeight: 1,
-                      }}
-                    >
-                      $490
+                    <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+                      {item.pathName}
                     </Typography>
                   </Box>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: COLORS.lime,
-                      color: "#101927",
-                      fontWeight: 800,
-                      px: 3,
-                      "&:hover": { bgcolor: "#b8ff32" },
-                    }}
+
+                  {/* Col 2 */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
+                    >
+                      Covers
+                    </Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+                      {item.modulesCount} Modules
+                    </Typography>
+                  </Box>
+
+                  {/* Col 3 */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
+                    >
+                      Exam Vouchers Required
+                    </Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+                      1 Voucher
+                    </Typography>
+                  </Box>
+
+                  {/* Col 4 – price + button */}
+                  <Stack
+                    direction={{ xs: "row", md: "column" }}
+                    spacing={1.5}
+                    sx={{ alignItems: { xs: "center", md: "flex-end" } }}
                   >
-                    Learn More
-                  </Button>
+                    <Box>
+                      <Typography
+                        sx={{ color: COLORS.textMuted, fontSize: 12, mb: 0.5 }}
+                      >
+                        Get certified for
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontWeight: 900,
+                          fontSize: 32,
+                          lineHeight: 1,
+                        }}
+                      >
+                        ${item.price}
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        bgcolor: COLORS.lime,
+                        color: "#101927",
+                        fontWeight: 800,
+                        px: 3,
+                        "&:hover": { bgcolor: "#b8ff32" },
+                      }}
+                      onClick={() => navigate(`/certificate/false/${item.id}`)}
+                    >
+                      Learn More
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Box>
             </Box>
-          </Box>
+          ))}
         </Container>
       </Box>
     </ThemeProvider>

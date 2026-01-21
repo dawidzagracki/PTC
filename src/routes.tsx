@@ -18,6 +18,16 @@ import LibraryPage from "./LibraryPage";
 import EmailVerifyPage from "./EmailVerifyPage";
 import WelcomePage from "./Pages/Register/WelcomePage";
 import OnBoardingPage from "./Pages/Register/OnBoardingPage";
+import BasePathOverviewPage from "./BasePathOverviewPage";
+import BaseModuleOverviewPage from "./Pages/MainSite/BaseModuleOverviewPage";
+import PathOverviewPage from "./PathOverviewPage";
+import CertificateOverviewPage from "./CertificateOverviewPage";
+import BillingPage from "./BillingPage";
+import AccountSettingsPage from "./AccountSettingsPage";
+import BadgesPage from "./BadgesPage";
+import InProgressPage from "./InProgressPage";
+import ExamsPage from "./ExamsPage";
+import CubesPage from "./CubesPage";
 
 export default function AppRoutes() {
   return (
@@ -28,8 +38,21 @@ export default function AppRoutes() {
       <Route path="/register-step-2" element={<RegisterStep2Page />} />
       <Route path="/register-step-3" element={<RegisterStep3Page />} />
       <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/module-overview" element={<ModuleOverviewPage />} />
-      <Route path="/module" element={<ModulePage />} />
+      <Route path="/module-overview/:id" element={<ModuleOverviewPage />} />
+      <Route path="/billing" element={<BillingPage />} />
+      <Route path="/account-settings" element={<AccountSettingsPage />} />
+      <Route path="/badges" element={<BadgesPage />} />
+      <Route path="/test" element={<InProgressPage />} />
+      <Route path="/exams" element={<ExamsPage />} />
+      <Route path="/cubes" element={<CubesPage />} />
+      <Route
+        path="/base-module-overview/:id"
+        element={<BaseModuleOverviewPage />}
+      />
+      <Route
+        path="/module/:moduleId/section/:sectionId"
+        element={<ModulePage />}
+      />
       <Route path="/certifications" element={<CertificationsPage />} />
       <Route path="/paths" element={<PathsPage />} />
       <Route path="/modules" element={<ModulesPage />} />
@@ -40,6 +63,15 @@ export default function AppRoutes() {
       <Route path="/email-verify" element={<EmailVerifyPage />} />
       <Route path="/welcome" element={<WelcomePage />} />
       <Route path="/on-boarding" element={<OnBoardingPage />} />
+      <Route path="/path/:id" element={<PathOverviewPage />} />
+      <Route
+        path="/certificate/:isMain/:id"
+        element={<CertificateOverviewPage />}
+      />
+      <Route
+        path="/path-overview/:pathName"
+        element={<BasePathOverviewPage />}
+      />
       {/* 404 lub redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

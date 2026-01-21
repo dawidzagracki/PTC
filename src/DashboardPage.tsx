@@ -4,7 +4,6 @@ import {
   Typography,
   Container,
   Button,
-  Divider,
   LinearProgress,
   Chip,
   responsiveFontSizes,
@@ -14,15 +13,31 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import linux from "./assets/linux.png";
-import arrowLeft from "./assets/arrow-left.png";
-import arrowRight from "./assets/arrow-right.png";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BoltIcon from "@mui/icons-material/Bolt";
+import FeedIcon from "@mui/icons-material/Feed";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import ControlPointIcon from "@mui/icons-material/ControlPoint";
+import SportsMmaIcon from "@mui/icons-material/SportsMma";
+import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LocalActivityIcon from "@mui/icons-material/LocalActivity";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
+import {
+  getUserEnrolledPaths,
+  type PathDetailsDto,
+  type PathModuleWithProgressDto,
+} from "./Services/PathsService";
+import {
+  getAllModulesWithUserProgress,
+  type ModuleWithUserProgressDto,
+  type SectionWithUserProgressDto,
+} from "./Services/ModulesService";
+import { useNavigate } from "react-router-dom";
 // import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 
 // Colors & tokens (HTB-like)
@@ -78,7 +93,7 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
-function Tag({ label }: { label: string }) {
+function Tag({ label, width = 120 }: { label: string; width?: number }) {
   return (
     <Chip
       size="small"
@@ -88,6 +103,7 @@ function Tag({ label }: { label: string }) {
         color: C.textDim,
         borderRadius: 1,
         fontWeight: 700,
+        width: { width },
         height: 22,
       }}
     />
@@ -97,10 +113,18 @@ function Tag({ label }: { label: string }) {
 function RowSection({
   title,
   complete,
+  isInProgress,
+  moduleId,
+  sectionId,
 }: {
   title: string;
   complete?: boolean;
+  isInProgress?: boolean;
+  moduleId: string;
+  sectionId: string;
 }) {
+  const navigate = useNavigate();
+
   return (
     <Stack
       direction="row"
@@ -108,44 +132,78 @@ function RowSection({
       spacing={2}
       sx={{
         px: 2,
-        py: 1.25,
+        py: 1.95,
         cursor: "pointer",
+        transition: "background-color 0.2s ease", // Płynne przejście tła
+        backgroundColor: isInProgress ? "#242f40" : "#1a2332",
+
+        // --- LOGIKA HOVER ---
         "&:hover": {
           backgroundColor: "#2f3e53ff",
+          "& .hover-arrow": {
+            opacity: 1, // Pokazuje strzałkę
+            transform: "translateX(0)", // Opcjonalnie: lekki ruch w prawo
+          },
         },
-        backgroundColor: complete ? "#242f40" : "#1a2332",
       }}
+      onClick={() => navigate(`/module/${moduleId}/section/${sectionId}`)}
     >
       {/* icon placeholder */}
-      <Box
-        sx={{
-          width: 28,
-          height: 28,
-          borderRadius: 1,
-          bgcolor: "#0A0F1E",
-          border: `1px solid ${C.borderSoft}`,
-        }}
-      />
+      {complete ? (
+        <CheckCircleIcon sx={{ color: C.lime, width: 28, height: 28 }} />
+      ) : (
+        // <Box
+        //   sx={{
+        //     width: 28,
+        //     height: 28,
+        //     borderRadius: 1,
+        //     bgcolor: "#0A0F1E",
+        //     border: `1px solid ${C.borderSoft}`,
+        //   }}
+        // />
+        <Box
+          sx={{
+            width: 34,
+            height: 34,
+            bgcolor: "background.default",
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FeedIcon sx={{ color: C.textDim }} />
+        </Box>
+      )}
 
       <Box sx={{ flex: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Tag label="ARTICLE" />
+          <Tag label="ARTICLE" width={70} />
           <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
         </Stack>
       </Box>
 
-      {complete ? (
-        <>
-          <Typography sx={{ color: C.lime, fontWeight: 700 }}>
+      {/* Kontener na status i strzałkę */}
+      <Stack direction="row" spacing={1} alignItems="center">
+        {isInProgress && (
+          <Typography sx={{ color: C.lime, fontWeight: 700, pr: 1 }}>
             In Progress
           </Typography>
-        </>
-      ) : (
-        <>
-          {/* <Typography sx={{ color: C.textDim, fontWeight: 700 }}>0%</Typography>
-          <ArrowForwardIosIcon sx={{ width: 16, height: 16 }} /> */}
-        </>
-      )}
+        )}
+
+        {/* STRZAŁKA: Widoczna tylko po najechaniu */}
+        <ArrowForwardIosIcon
+          className="hover-arrow"
+          sx={{
+            width: 16,
+            height: 16,
+            color: C.textDim,
+            opacity: 0, // Domyślnie ukryta
+            transform: "translateX(-5px)", // Startuje lekko z lewej
+            transition: "all 0.2s ease", // Płynne pojawianie się
+          }}
+        />
+      </Stack>
     </Stack>
   );
 }
@@ -153,20 +211,23 @@ function RowSection({
 function Row({
   title,
   complete,
-  showBar,
+  tag,
+  moduleId,
 }: {
   title: string;
   complete?: boolean;
-  showBar?: boolean;
+  tag: string;
+  moduleId: string;
 }) {
+  const navigate = useNavigate();
+
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={2}
+    <Box
       sx={{
         px: 2,
-        py: 1.25,
+        py: 1.75,
+        display: "flex",
+        alignItems: "center",
       }}
     >
       {/* icon placeholder */}
@@ -177,26 +238,15 @@ function Row({
           borderRadius: 1,
           bgcolor: "#0A0F1E",
           border: `1px solid ${C.borderSoft}`,
+          mr: 2,
         }}
       />
 
-      <Box sx={{ flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Tag label="GENERAL" />
+      <Box sx={{ flex: 1, mr: 2 }}>
+        <Stack direction="column" spacing={1} justifyContent={"left"}>
+          <Tag label={tag} width={70} />
           <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
         </Stack>
-        {showBar && (
-          <LinearProgress
-            variant="determinate"
-            value={0}
-            sx={{
-              mt: 1,
-              height: 6,
-              bgcolor: "#131a2a",
-              "& .MuiLinearProgress-bar": { bgcolor: C.border },
-            }}
-          />
-        )}
       </Box>
 
       {complete ? (
@@ -207,18 +257,88 @@ function Row({
           </Typography>
         </>
       ) : (
-        <>
-          <Typography sx={{ color: C.textDim, fontWeight: 700 }}>0%</Typography>
-          <ArrowForwardIosIcon sx={{ width: 16, height: 16 }} />
-        </>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <LinearProgress
+            variant="determinate"
+            value={0}
+            sx={{
+              width: 160,
+              height: 6,
+              mr: 1.5,
+              borderRadius: 999,
+              overflow: "hidden",
+
+              /* TRACK – paski */
+              backgroundColor: "#131a2a",
+              backgroundImage:
+                "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+              backgroundSize: "14px 14px",
+
+              /* BAR */
+              "& .MuiLinearProgress-bar": {
+                borderRadius: 999,
+                backgroundColor: "rgba(255,255,255,0.18)",
+                backgroundImage: "none",
+              },
+            }}
+          />
+
+          <Typography sx={{ color: C.textDim, fontWeight: 700, mr: 3 }}>
+            0%
+          </Typography>
+
+          <Button
+            sx={{
+              height: 30,
+              borderRadius: 100,
+              display: "flex",
+              justifyContent: "center",
+              color: C.text,
+              "&:hover": {
+                backgroundColor: "#2f3e535e",
+              },
+            }}
+            onClick={() => navigate(`/module-overview/${moduleId}`, {})}
+          >
+            <ArrowForwardIosIcon sx={{ height: 16 }} />
+          </Button>
+        </Box>
       )}
-    </Stack>
+    </Box>
   );
 }
 
 export default function DashboardPage() {
   const username = localStorage.getItem("username");
+  const navigate = useNavigate();
   const [showPw, setShowPw] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+  const [paths, setPaths] = useState<PathDetailsDto>();
+  const [module, setModule] = useState<ModuleWithUserProgressDto>();
+
+  useEffect(() => {
+    fetchPaths();
+    fetchModules();
+  }, []);
+
+  async function fetchPaths() {
+    await getUserEnrolledPaths().then((paths) => {
+      setPaths(paths);
+      console.log(paths);
+    });
+  }
+
+  async function fetchModules() {
+    await getAllModulesWithUserProgress().then((module) => {
+      setModule(module);
+    });
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -319,7 +439,19 @@ export default function DashboardPage() {
                 }}
               >
                 {/* Enrolled Path header */}
-                <Box sx={{ p: 2.5, width: "100%" }}>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    width: "100%",
+                    "&:hover": {
+                      backgroundColor: "#2f3e535e",
+                    },
+                    cursor: "pointer",
+                    borderRadius: 3,
+                    mb: 2,
+                  }}
+                  onClick={() => navigate(`/path/${paths?.id}`)}
+                >
                   <Stack
                     direction="row"
                     spacing={2}
@@ -365,39 +497,28 @@ export default function DashboardPage() {
                           />
                         </Stack>
                         <Typography sx={{ fontWeight: 800 }}>
-                          Information Security Foundations
+                          {paths?.name}
                         </Typography>
                         <Stack
                           direction="row"
                           spacing={3}
                           sx={{ color: C.textDim, mt: 0.5 }}
                         >
-                          <Typography>Easy</Typography>
-                          <Typography>9d 7h 30 min</Typography>
-                          <Typography>12 Modules</Typography>
+                          <Typography>{paths?.difficulty}</Typography>
+                          <Typography>9d 10h 0m</Typography>
+                          <Typography>
+                            {paths?.modules.length} Modules
+                          </Typography>
                         </Stack>
                       </Box>
                     </Stack>
 
                     {/* Progress to the right */}
-                    <Box sx={{ minWidth: 220 }}>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Box sx={{ flex: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={25}
-                            sx={{
-                              height: 8,
-                              bgcolor: "#131a2a",
-                              "& .MuiLinearProgress-bar": { bgcolor: C.lime },
-                            }}
-                          />
-                        </Box>
-                        <Typography sx={{ width: 40, textAlign: "right" }}>
-                          25%
-                        </Typography>
-                      </Stack>
-                    </Box>
+                    <Typography
+                      sx={{ fontWeight: 600, fontSize: 16, color: C.lime }}
+                    >
+                      See Full Path
+                    </Typography>
                   </Stack>
                 </Box>
 
@@ -416,27 +537,32 @@ export default function DashboardPage() {
                       px: 2.5,
                       py: 1.5,
                       borderBottom: `1px solid ${C.borderSoft}`,
+                      height: 70,
+                      alignItems: "center",
+                      display: "flex",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Typography sx={{ fontWeight: 800 }}>Modules</Typography>
-                      <Typography sx={{ color: C.textDim }}>
-                        3/12 Modules
-                      </Typography>
-                    </Stack>
+                    <Typography sx={{ fontWeight: 800, fontSize: 20 }}>
+                      Modules
+                    </Typography>
+                    <Typography sx={{ color: C.textDim, fontSize: 17 }}>
+                      {paths?.modules.length} Modules
+                    </Typography>
                   </Box>
 
-                  {/* Scrollable list area like original */}
                   <Box sx={{ maxHeight: 420, overflow: "auto" }}>
-                    <Row title="Intro To Academy" complete />
-                    <Row title="Learning Process" complete />
-                    <Row title="Setting Up" complete />
-                    <Row title="Linux Fundamentals" showBar />
-                    <Row title="Windows Fundamentals" showBar />
+                    {paths?.modules.map(
+                      (x: PathModuleWithProgressDto, i: number) => (
+                        <Row
+                          title={x.moduleName}
+                          complete={x.userPercentCompleted == 100}
+                          tag={x.tag}
+                          key={i}
+                          moduleId={module?.id ?? ""}
+                        />
+                      )
+                    )}
                   </Box>
                 </Box>
 
@@ -444,18 +570,28 @@ export default function DashboardPage() {
                 <Box
                   sx={{
                     p: 2.5,
+                    mt: 2,
                     display: "flex",
                     justifyContent: "right",
                     gap: 2,
                     width: "100%",
                   }}
                 >
-                  <Button variant="text" sx={{ color: C.text, px: 2 }}>
+                  <Button
+                    variant="text"
+                    sx={{ color: C.text, px: 2 }}
+                    onClick={() => navigate(`/path/${paths?.id}`)}
+                  >
                     See Full Path
                   </Button>
                   <Button
                     variant="contained"
                     sx={{ bgcolor: C.lime, color: "#0A0F1E", fontWeight: 700 }}
+                    onClick={() =>
+                      navigate(
+                        `/module/${paths?.nextModuleId}/section/${paths?.nextModuleLastSectionId}`
+                      )
+                    }
                   >
                     Continue Learning
                   </Button>
@@ -475,7 +611,19 @@ export default function DashboardPage() {
                 }}
               >
                 {/* Enrolled Path header */}
-                <Box sx={{ p: 2.5, width: "100%" }}>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    width: "100%",
+                    "&:hover": {
+                      backgroundColor: "#2f3e535e",
+                    },
+                    cursor: "pointer",
+                    borderRadius: 3,
+                    mb: 2,
+                  }}
+                  onClick={() => navigate(`/module-overview/${module?.id}`)}
+                >
                   <Stack
                     direction="row"
                     spacing={2}
@@ -521,16 +669,18 @@ export default function DashboardPage() {
                           />
                         </Stack>
                         <Typography sx={{ fontWeight: 800 }}>
-                          Linux Fundamentals
+                          {module?.name}
                         </Typography>
                         <Stack
                           direction="row"
                           spacing={3}
                           sx={{ color: C.textDim, mt: 0.5 }}
                         >
-                          <Typography>Easy</Typography>
+                          <Typography>{module?.difficulty}</Typography>
                           <Typography>9d 7h 30 min</Typography>
-                          <Typography>12 Modules</Typography>
+                          <Typography>
+                            {module?.sectionsCount} Sections
+                          </Typography>
                         </Stack>
                       </Box>
                     </Stack>
@@ -541,17 +691,28 @@ export default function DashboardPage() {
                         <Box sx={{ flex: 1 }}>
                           <LinearProgress
                             variant="determinate"
-                            value={25}
+                            value={paths?.userPercentCompleted ?? 0}
                             sx={{
                               height: 8,
-                              bgcolor: "#131a2a",
-                              "& .MuiLinearProgress-bar": { bgcolor: C.lime },
+                              borderRadius: 999,
+                              overflow: "hidden",
+                              backgroundColor: "#131a2a",
+                              backgroundImage:
+                                "repeating-linear-gradient(-45deg, rgba(255,255,255,0.35) 0 6px, rgba(255,255,255,0.08) 6px 12px)",
+
+                              backgroundSize: "16px 16px",
+                              "& .MuiLinearProgress-bar": {
+                                borderRadius: 999,
+                                backgroundColor: C.lime,
+                                backgroundImage: "none",
+                              },
                             }}
                           />
                         </Box>
-                        <Typography sx={{ width: 40, textAlign: "right" }}>
-                          25%
+                        <Typography sx={{ width: 25, textAlign: "right" }}>
+                          {module?.userPercentCompleted}%
                         </Typography>
+                        <KeyboardArrowRightIcon />
                       </Stack>
                     </Box>
                   </Stack>
@@ -571,45 +732,79 @@ export default function DashboardPage() {
                     sx={{
                       py: 1.5,
                       px: 2,
-                      borderBottom: `1px solid ${C.borderSoft}`,
+                      height: 70,
+                      alignItems: "center",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      cursor: "pointer",
                     }}
+                    onClick={() => setIsCollapsed(!isCollapsed)}
                   >
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Typography sx={{ fontWeight: 800 }}>Modules</Typography>
-                      <Typography sx={{ color: C.textDim }}>
-                        1/3 Sections
+                    <Box>
+                      <Typography sx={{ fontWeight: 800, fontSize: 20 }}>
+                        Sections
                       </Typography>
-                    </Stack>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <Typography sx={{ color: C.textDim, fontSize: 17 }}>
+                        1/{module?.sectionsCount} Sections
+                      </Typography>
+                      {isCollapsed ? (
+                        <KeyboardArrowUpIcon sx={{ color: C.textDim }} />
+                      ) : (
+                        <KeyboardArrowDownIcon sx={{ color: C.textDim }} />
+                      )}
+                    </Box>
                   </Box>
 
-                  {/* Scrollable list area like original */}
-                  <Box sx={{ maxHeight: 420, overflow: "auto" }}>
-                    <RowSection title="Intro To Academy" complete={false} />
-                    <RowSection title="Learning Process" complete />
-                    <RowSection title="Setting Up" complete={false} />
-                  </Box>
+                  {!isCollapsed && (
+                    <Box
+                      sx={{ maxHeight: 420, overflow: "auto", borderRadius: 4 }}
+                    >
+                      {module?.sections.map(
+                        (x: SectionWithUserProgressDto, i: number) => (
+                          <RowSection
+                            title={x.name}
+                            complete={x.isCompleted}
+                            isInProgress={
+                              module.lastSectionId === x.id && !x.isCompleted
+                            }
+                            moduleId={module.id}
+                            sectionId={x.id}
+                            key={i}
+                          />
+                        )
+                      )}
+                    </Box>
+                  )}
                 </Box>
 
                 {/* Footer buttons */}
                 <Box
                   sx={{
                     p: 2.5,
+                    mt: 2,
                     display: "flex",
                     justifyContent: "right",
                     gap: 2,
                     width: "100%",
                   }}
                 >
-                  <Button variant="text" sx={{ color: C.text, px: 2 }}>
+                  <Button
+                    variant="text"
+                    sx={{ color: C.text, px: 2 }}
+                    onClick={() => navigate(`/module-overview/${module?.id}`)}
+                  >
                     See Full Module
                   </Button>
                   <Button
                     variant="contained"
                     sx={{ bgcolor: C.lime, color: "#0A0F1E", fontWeight: 700 }}
+                    onClick={() =>
+                      navigate(
+                        `/module/${module?.id}/section/${module?.lastSectionId}`
+                      )
+                    }
                   >
                     Continue Learning
                   </Button>
@@ -634,6 +829,7 @@ export default function DashboardPage() {
                   border: `1px solid ${C.border}`,
                   borderRadius: 2,
                   p: 2.5,
+                  pb: 0,
                   pt: 2,
                   mb: 3,
                 }}
@@ -709,7 +905,7 @@ export default function DashboardPage() {
                   </Box>
                 </Stack>
 
-                <Divider sx={{ borderColor: C.border, my: 2 }} />
+                {/* <Divider sx={{ borderColor: C.border, my: 2 }} />
 
                 <Typography sx={{ fontWeight: 700, mb: 1 }}>
                   Weekly Streak
@@ -721,7 +917,7 @@ export default function DashboardPage() {
                   variant="determinate"
                   value={0}
                   sx={{ height: 8, bgcolor: "#131a2a" }}
-                />
+                /> */}
               </Box>
 
               {/* Progress buckets */}
@@ -729,16 +925,53 @@ export default function DashboardPage() {
                 Academy General Progress
               </Typography>
 
-              <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 2,
+                }}
+              >
                 {[
-                  "Backend Engineering",
-                  "Dev Ops",
-                  "Core Programming",
-                  "Full-Stack Engineering",
-                  "Frontend Engineering",
-                ].map((cat) => (
+                  {
+                    title: "OFFENSIVE",
+                    value: 1.5,
+                    icon: (
+                      <SportsMmaIcon
+                        sx={{ width: 18, height: 18, color: "#FF4D4D" }}
+                      />
+                    ),
+                  },
+                  {
+                    title: "DEFENSIVE",
+                    value: 0,
+                    icon: (
+                      <GppGoodOutlinedIcon
+                        sx={{ width: 18, height: 18, color: "#4DA3FF" }}
+                      />
+                    ),
+                  },
+                  {
+                    title: "GENERAL",
+                    value: 11.8,
+                    icon: (
+                      <ArticleOutlinedIcon
+                        sx={{ width: 18, height: 18, color: "#C9D3E3" }}
+                      />
+                    ),
+                  },
+                  {
+                    title: "PURPLE",
+                    value: 0,
+                    icon: (
+                      <ShieldOutlinedIcon
+                        sx={{ width: 18, height: 18, color: "#A855F7" }}
+                      />
+                    ),
+                  },
+                ].map((x) => (
                   <Box
-                    key={cat}
+                    key={x.title}
                     sx={{
                       bgcolor: "#1a2332",
                       border: `1px solid ${C.border}`,
@@ -748,157 +981,197 @@ export default function DashboardPage() {
                   >
                     <Stack
                       direction="row"
-                      justifyContent="space-between"
+                      spacing={1}
                       alignItems="center"
+                      sx={{ mb: 2 }}
                     >
-                      <Typography sx={{ fontWeight: 800 }}>{cat}</Typography>
-                      <Typography sx={{ color: C.textDim }}>0%</Typography>
+                      {x.icon}
+                      <Typography
+                        sx={{
+                          fontWeight: 900,
+                          letterSpacing: 0.4,
+                          fontSize: 12,
+                          color: C.textDim,
+                        }}
+                      >
+                        {x.title}
+                      </Typography>
                     </Stack>
+
+                    <Typography
+                      sx={{ fontWeight: 900, fontSize: 28, lineHeight: 1 }}
+                    >
+                      {x.value}%
+                    </Typography>
+
                     <LinearProgress
                       variant="determinate"
-                      value={0}
-                      sx={{ mt: 1, height: 8, bgcolor: "#131a2a" }}
+                      value={x.value}
+                      sx={{
+                        mt: 1.5,
+                        height: 6,
+                        borderRadius: 999,
+                        overflow: "hidden",
+
+                        /* TRACK – paski */
+                        backgroundColor: "#131a2a",
+                        backgroundImage:
+                          "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+                        backgroundSize: "14px 14px",
+
+                        /* BAR */
+                        "& .MuiLinearProgress-bar": {
+                          borderRadius: 999,
+                          backgroundColor:
+                            x.title === "GENERAL"
+                              ? C.lime
+                              : "rgba(255,255,255,0.18)",
+                          backgroundImage: "none",
+                        },
+                      }}
                     />
                   </Box>
                 ))}
-              </Stack>
+              </Box>
             </Box>
           </Stack>
-          <Box sx={{ justifyContent: "space-between", display: "flex" }}>
-            <Typography variant="h4" sx={{ fontWeight: 900, mb: 3, mt: 10 }}>
-              Modules In Progress
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "right" }}>
-              <Typography
-                sx={{
-                  mt: 14,
-                  mr: 3,
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: 14,
-                }}
-              >
-                View all Modules in Progress
-              </Typography>
-              {/* <Box
-                sx={{
-                  bgcolor: "#55555580",
-                  p: 0.5,
-                  pl: 1,
-                  mr: 3,
-                  mt: 13,
-                  borderRadius: 1,
-                  alignContent: "center",
-                  height: 27,
-                }}
-              >
-                <ArrowBackIosIcon sx={{ width: 18 }} />
-              </Box> */}
-              <Box sx={{ display: "flex", gap: 0.1, mt: 12 }}>
-                <img src={arrowLeft} width={45} height={45} />
-                <img src={arrowRight} width={45} height={45} />
-              </Box>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              gap: 3,
-              justifyContent: "space-between",
-              mb: 3,
-              width: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                position: "relative",
-                bgcolor: "background.paper",
-                borderRadius: 4,
-                width: "29%",
-                p: 2,
-              }}
-            >
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "10%",
-                  left: "8%",
-                  bgcolor: "#C47CFF",
-                  color: "#000",
-                  px: 0.7,
-                  py: 0.1,
-                  borderRadius: 0.7,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  zIndex: 10,
-                }}
-              >
-                In Progress
-              </Box>
-              <img src={linux} width="100%" />
-              <Typography sx={{ fontSize: 15 }}>Regular General</Typography>
-              <Typography sx={{ fontSize: 24 }}>Linux</Typography>
-              <Divider sx={{ my: 1 }} />
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      borderRight: 1,
-                      borderWidth: 2,
-                      pr: 1,
-                      borderColor: C.border,
-                    }}
-                  >
-                    Fundamental
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 14,
-                      borderRight: 1,
-                      borderWidth: 2,
-                      pr: 1,
-                      ml: 1,
-                      borderColor: C.border,
-                    }}
-                  >
-                    6h
-                  </Typography>
-                  <Typography sx={{ fontSize: 14, ml: 1 }}>Tier 0</Typography>
-                </Box>
-                <ArrowForwardIosIcon sx={{ width: 17 }} />
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                bgcolor: "background.paper",
-                borderRadius: 4,
-                width: "29%",
-              }}
-            >
-              <Typography>Linux</Typography>
-            </Box>
-            <Box
-              sx={{
-                bgcolor: "background.paper",
-                borderRadius: 4,
-                width: "29%",
-              }}
-            >
-              <Typography>Linux</Typography>
-            </Box>
-            <Box
-              sx={{
-                bgcolor: "background.paper",
-                borderRadius: 4,
-                width: "29%",
-              }}
-            >
-              <Typography>Linux</Typography>
-            </Box>
-          </Box>
         </Container>
       </Box>
     </ThemeProvider>
   );
 }
+
+// MODULES IN PROGRESS SIDE SCROOL
+// {/* <Box sx={{ justifyContent: "space-between", display: "flex" }}>
+//             <Typography variant="h4" sx={{ fontWeight: 900, mb: 3, mt: 10 }}>
+//               Modules In Progress
+//             </Typography>
+//             <Box sx={{ display: "flex", alignItems: "right" }}>
+//               <Typography
+//                 sx={{
+//                   mt: 14,
+//                   mr: 3,
+//                   cursor: "pointer",
+//                   fontWeight: 700,
+//                   fontSize: 14,
+//                 }}
+//               >
+//                 View all Modules in Progress
+//               </Typography>
+//               {/* <Box
+//                 sx={{
+//                   bgcolor: "#55555580",
+//                   p: 0.5,
+//                   pl: 1,
+//                   mr: 3,
+//                   mt: 13,
+//                   borderRadius: 1,
+//                   alignContent: "center",
+//                   height: 27,
+//                 }}
+//               >
+//                 <ArrowBackIosIcon sx={{ width: 18 }} />
+//               </Box> */}
+//               <Box sx={{ display: "flex", gap: 0.1, mt: 12 }}>
+//                 <img src={arrowLeft} width={45} height={45} />
+//                 <img src={arrowRight} width={45} height={45} />
+//               </Box>
+//             </Box>
+//           </Box>
+//           <Box
+//             sx={{
+//               display: "flex",
+//               gap: 3,
+//               justifyContent: "space-between",
+//               mb: 3,
+//               width: "100%",
+//             }}
+//           >
+//             <Box
+//               sx={{
+//                 position: "relative",
+//                 bgcolor: "background.paper",
+//                 borderRadius: 4,
+//                 width: "29%",
+//                 p: 2,
+//               }}
+//             >
+//               <Box
+//                 sx={{
+//                   position: "absolute",
+//                   top: "10%",
+//                   left: "8%",
+//                   bgcolor: "#C47CFF",
+//                   color: "#000",
+//                   px: 0.7,
+//                   py: 0.1,
+//                   borderRadius: 0.7,
+//                   fontSize: 12,
+//                   fontWeight: 700,
+//                   zIndex: 10,
+//                 }}
+//               >
+//                 In Progress
+//               </Box>
+//               <img src={linux} width="100%" />
+//               <Typography sx={{ fontSize: 15 }}>Regular General</Typography>
+//               <Typography sx={{ fontSize: 24 }}>Linux</Typography>
+//               <Divider sx={{ my: 1 }} />
+//               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+//                 <Box sx={{ display: "flex", alignItems: "center" }}>
+//                   <Typography
+//                     sx={{
+//                       fontSize: 14,
+//                       borderRight: 1,
+//                       borderWidth: 2,
+//                       pr: 1,
+//                       borderColor: C.border,
+//                     }}
+//                   >
+//                     Fundamental
+//                   </Typography>
+//                   <Typography
+//                     sx={{
+//                       fontSize: 14,
+//                       borderRight: 1,
+//                       borderWidth: 2,
+//                       pr: 1,
+//                       ml: 1,
+//                       borderColor: C.border,
+//                     }}
+//                   >
+//                     6h
+//                   </Typography>
+//                   <Typography sx={{ fontSize: 14, ml: 1 }}>Tier 0</Typography>
+//                 </Box>
+//                 <ArrowForwardIosIcon sx={{ width: 17 }} />
+//               </Box>
+//             </Box>
+//             <Box
+//               sx={{
+//                 bgcolor: "background.paper",
+//                 borderRadius: 4,
+//                 width: "29%",
+//               }}
+//             >
+//               <Typography>Linux</Typography>
+//             </Box>
+//             <Box
+//               sx={{
+//                 bgcolor: "background.paper",
+//                 borderRadius: 4,
+//                 width: "29%",
+//               }}
+//             >
+//               <Typography>Linux</Typography>
+//             </Box>
+//             <Box
+//               sx={{
+//                 bgcolor: "background.paper",
+//                 borderRadius: 4,
+//                 width: "29%",
+//               }}
+//             >
+//               <Typography>Linux</Typography>
+//             </Box>
+//           </Box> */}

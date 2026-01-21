@@ -58,14 +58,50 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
-const faqItems: string[] = [
-  "What is HTB Academy?",
-  "What is the difference between Hack The Box and HTB Academy?",
-  "I do not know anything about cybersecurity? Is HTB Academy a good place to start?",
-  "Is HTB Academy Free?",
-  "How do I sign in? Do I need to hack my login here too?",
-  "Can I login to Academy with my Hack The Box main platform email and password?",
-  "Can I use the same username and password as Hack The Box main platform account?",
+const faqItems = [
+  {
+    title: "What is PathTheCode?",
+    description:
+      "PathTheCode is a learning platform designed to help you become a real-world developer through structured learning paths, interactive modules, and hands-on coding challenges directly in your browser.",
+  },
+  {
+    title: "How is PathTheCode different from other coding platforms?",
+    description: `PathTheCode combines interactive coding tasks, real project simulations, and job-oriented skill paths.
+      Instead of random tutorials, you follow a guided program designed to build industry-ready skills.`,
+  },
+  {
+    title: "I am new to programming. Is PathTheCode a good place to start?",
+    description: `Absolutely.
+        PathTheCode includes Fundamental modules that teach core programming concepts step by step.
+        Even complete beginners can start learning from scratch and build up to advanced topics like backend development, frontend frameworks, or cloud engineering.`,
+  },
+  {
+    title: "Is PathTheCode free?",
+    description: `PathTheCode offers a free tier with access to selected modules.
+      Full access to advanced modules, job role paths, and interactive environments requires a premium plan.`,
+  },
+  {
+    title: "How do I sign in to PathTheCode?",
+    description: `You can sign in using a standard email and password or through OAuth providers (Google, GitHub — depending on your setup).
+          No hacking required — security is handled for you. 😉`,
+  },
+  {
+    title: "Can I use my PathTheCode account across different devices?",
+    description: `Yes.
+        Your progress, achievements, and completed modules sync automatically across all devices.
+        You can continue learning anywhere.`,
+  },
+  {
+    title: "Do I need a strong computer to run coding environments?",
+    description: `No.
+      PathTheCode uses browser-based interactive environments, so exercises run on our servers.
+      Your device only needs to support a modern browser — nothing more.`,
+  },
+  {
+    title: "What are Skill Paths and Job Role Paths?",
+    description:
+      "Skill Paths focus on specific technologies (e.g., React Fundamentals, .NET Backend Essentials). Job Role Paths prepare you for full positions (e.g., Full Stack Developer, Cloud Engineer). Each path contains multiple modules, projects, and assessments that guide you from zero to job-ready.",
+  },
 ];
 
 const FaqPage: React.FC = () => {
@@ -127,15 +163,16 @@ const FaqPage: React.FC = () => {
                   expandIcon={<ExpandMoreIcon sx={{ color: "#99A3B3" }} />}
                   sx={{ px: 3, py: 2 }}
                 >
-                  <Typography sx={{ fontWeight: 500 }}>{question}</Typography>
+                  <Typography sx={{ fontWeight: 500 }}>
+                    {question.title}
+                  </Typography>
                 </AccordionSummary>
 
                 <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
 
                 <AccordionDetails sx={{ px: 3, py: 2.5 }}>
                   <Typography color="text.secondary">
-                    Placeholder answer text (treść nie jest kopiowana z HTB,
-                    tylko zachowany jest układ i kolorystyka).
+                    {question.description}
                   </Typography>
                 </AccordionDetails>
               </Accordion>

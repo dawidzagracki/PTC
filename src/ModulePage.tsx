@@ -4,19 +4,27 @@ import {
   Typography,
   Container,
   Button,
-  Divider,
   responsiveFontSizes,
   ThemeProvider,
   CssBaseline,
   createTheme,
-  Toolbar,
-  AppBar,
-  IconButton,
   List,
   ListItem,
 } from "@mui/material";
-import logo from "./assets/logo.png";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
+import SubNavMenu from "./Common/Navigation/SubNavMenu";
+import MarkdownRenderer from "./Common/MarkdownRenderer";
+import WestIcon from "@mui/icons-material/West";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
+import testMd from "./assets/md/test.md?raw";
+import { useEffect, useState } from "react";
+import {
+  getModuleSectionPlayer,
+  type ModuleSectionPlayerDto,
+} from "./Services/LearningService";
+import { useNavigate, useParams } from "react-router-dom";
 
 let theme = createTheme({
   palette: {
@@ -58,82 +66,29 @@ let theme = createTheme({
   },
 });
 
-const navItems = ["Dashboard", "Library", "Resources"];
-
 theme = responsiveFontSizes(theme);
 
 export default function ModulePage() {
-  // fake data for right-hand TOC
-  const toc = [
-    {
-      num: 1,
-      title: "Introduction",
-      sections: [
-        {
-          type: "Article",
-          title: "Linux Structure",
-          active: true,
-          state: "In progress",
-        },
-        { type: "Article", title: "Linux Distributions" },
-        { type: "Article", title: "Introduction to Shell" },
-      ],
-    },
-    { num: 2, title: "The Shell", sectionsCount: 3 },
-    { num: 3, title: "Workflow", sectionsCount: 8 },
-    { num: 4, title: "System Management", sectionsCount: 9 },
-    { num: 5, title: "Linux Networking", sectionsCount: 2 },
-  ];
+  const { moduleId, sectionId } = useParams();
+  const navigate = useNavigate();
+  const [moduleInfo, setModuleInfo] = useState<ModuleSectionPlayerDto>();
+  useEffect(() => {
+    fetchModuleDetails();
+  }, [moduleId, sectionId]);
+
+  async function fetchModuleDetails() {
+    await getModuleSectionPlayer(moduleId ?? "", sectionId ?? "").then(
+      (module) => {
+        setModuleInfo(module);
+        console.log(module);
+      }
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar
-        position="sticky"
-        sx={{
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <Toolbar
-          sx={{
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-            backdropFilter: "blur(6px)",
-            minHeight: 72,
-          }}
-        >
-          <Box sx={{ width: 2, mr: 0 }} />
-          <Box sx={{ mr: 4 }}>
-            <img src={logo} width={90} />
-          </Box>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ display: { xs: "none", md: "flex" } }}
-          >
-            {navItems.map((label) => (
-              <Button
-                key={label}
-                color="inherit"
-                variant="text"
-                size="small"
-                sx={{ opacity: 0.9 }}
-              >
-                {label}
-              </Button>
-            ))}
-          </Stack>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          <Stack direction="row" spacing={1.5}>
-            <Button variant="contained" color="primary">
-              Upgrade
-            </Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+      <SubNavMenu />
       <Box
         sx={{
           bgcolor: "background.default",
@@ -144,7 +99,7 @@ export default function ModulePage() {
         {/* Top strip (breadcrumbs / header row) */}
         <Box
           sx={{
-            height: 56,
+            height: 66,
             px: 2,
             display: "flex",
             alignItems: "center",
@@ -165,18 +120,10 @@ export default function ModulePage() {
               maxWidth: 1150,
             }}
           >
-            <IconButton size="small" sx={{ color: "#E6F1FF", opacity: 0.8 }}>
-              {/* placeholder for back chevron */}
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  borderLeft: "2px solid #E6F1FF",
-                  borderBottom: "2px solid #E6F1FF",
-                  transform: "rotate(45deg)",
-                }}
-              />
-            </IconButton>
+            <WestIcon
+              onClick={() => navigate(`/module-overview/${moduleId}`, {})}
+              sx={{ cursor: "pointer" }}
+            />
 
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
@@ -188,99 +135,58 @@ export default function ModulePage() {
                   opacity: 0.9,
                 }}
               />
-              <Typography sx={{ fontWeight: 700 }}>
-                Linux Fundamentals
-              </Typography>
-              <Typography sx={{ opacity: 0.6, fontSize: 14 }}>0%</Typography>
-              <Box
-                sx={{
-                  width: 120,
-                  height: 6,
-                  bgcolor: "transparent",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 999,
-                  position: "relative",
-                }}
-              >
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography sx={{ fontWeight: 700 }}>
+                    Linux Fundamentals
+                  </Typography>
+                  <Typography sx={{ opacity: 0.6, fontSize: 14, ml: 2 }}>
+                    0%
+                  </Typography>
+                </Box>
+
                 <Box
                   sx={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "0%",
-                    bgcolor: "#9AF80B",
+                    width: "100%",
+                    height: 6,
+                    bgcolor: "transparent",
+                    border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: 999,
+                    position: "relative",
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "0%",
+                      bgcolor: "#9AF80B",
+                      borderRadius: 999,
+                    }}
+                  />
+                </Box>
               </Box>
             </Stack>
 
             <Box sx={{ flexGrow: 1 }} />
             {/* tiny help icons placeholders */}
             <Stack direction="row" spacing={2} sx={{ opacity: 0.8 }}>
-              <Box
-                sx={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 1,
-                  border: "1px solid rgba(255,255,255,0.4)",
-                }}
-              />
-              <Box
-                sx={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 1,
-                  border: "1px solid rgba(255,255,255,0.4)",
-                }}
-              />
-              <Box
-                sx={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 1,
-                  border: "1px solid rgba(255,255,255,0.4)",
-                }}
-              />
+              <IntegrationInstructionsIcon />
+              <HelpOutlineIcon />
+              <FormatListBulletedIcon />
             </Stack>
           </Box>
         </Box>
 
         <Container maxWidth="lg" sx={{ pt: 3, pb: 16 }}>
-          <Stack direction="row" spacing={4} alignItems="flex-start">
+          <Box sx={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
             {/* LEFT – article content */}
-            <Box sx={{ flex: 1, maxWidth: 920 }}>
+            <Box sx={{ flex: 1, maxWidth: 920, mt: 5 }}>
               <Typography sx={{ opacity: 0.7, fontSize: 13, mb: 1 }}>
-                Section <b>1</b> / 30
+                Section <b>{moduleInfo?.currentSectionNumber}</b> /{" "}
+                {moduleInfo?.totalSectionsCount}
               </Typography>
-
-              <Typography variant="h4" sx={{ fontWeight: 900, mb: 1.5 }}>
-                Linux Structure
-              </Typography>
-
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 3 }} />
-
-              <Typography sx={{ lineHeight: 1.8, color: "#C9D7F0" }}>
-                Linux, as you might already know, is an operating system used
-                for personal computers, servers, and even mobile devices.
-                However, Linux stands as a fundamental pillar in cybersecurity,
-                renowned for its robustness, flexibility, and open-source
-                nature. In this section we are going to cover the Linux
-                structure, history, philosophy, architecture, and file system
-                hierarchy—essential knowledge for any cybersecurity
-                professional. You can think of this as your first driving lesson
-                for a new car, getting a basic understanding of the vehicle,
-                what it consists of, and why it is the way it currently is.
-              </Typography>
-
-              <Typography variant="h5" sx={{ fontWeight: 800, mt: 4, mb: 1 }}>
-                History
-              </Typography>
-              <Typography sx={{ lineHeight: 1.8, color: "#C9D7F0" }}>
-                Many events led up to creating the first Linux kernel and,
-                ultimately, the Linux operating system (OS), starting with the
-                Unix operating system’s release by Ken Thompson and Dennis
-                Ritchie in the 1970s…
-              </Typography>
+              <MarkdownRenderer markdown={testMd} />
             </Box>
 
             {/* RIGHT – sticky Table of Contents */}
@@ -308,17 +214,30 @@ export default function ModulePage() {
               </Box>
 
               <List disablePadding>
-                {toc.map((group, gi) => (
-                  <Box key={gi} sx={{}}>
-                    <ListItem sx={{ px: 2, py: 0.8 }}>
+                {moduleInfo?.sections.map((x, index) => (
+                  <Box key={index} sx={{}}>
+                    <ListItem
+                      sx={{ px: 2, py: 0.8 }}
+                      onClick={() =>
+                        navigate(`/module/${moduleId}/section/${x.id}`)
+                      }
+                    >
                       <Box
-                        key={gi}
                         sx={{
-                          bgcolor: "background.paper",
+                          bgcolor:
+                            x.id === moduleInfo.sectionId
+                              ? "rgba(125, 137, 148, 0.12)"
+                              : "background.paper",
                           borderRadius: 2,
                           p: 2,
                           width: "100%",
                           border: "1px solid rgba(255,255,255,0.05)",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            bgcolor: "rgba(145, 158, 171, 0.12)",
+                            borderColor: "rgba(255, 255, 255, 0.2)",
+                          },
                         }}
                       >
                         <Stack
@@ -346,84 +265,21 @@ export default function ModulePage() {
                                 color: "#ffffffff",
                               }}
                             >
-                              {gi + 1}
+                              {index + 1}
                             </Box>
 
                             <Typography sx={{ fontWeight: 700 }}>
-                              {group.title}
+                              {x.name}
                             </Typography>
                           </Box>
-
-                          <Stack
-                            direction="row"
-                            spacing={3}
-                            alignItems="center"
-                          >
-                            <Typography sx={{ opacity: 0.7 }}>
-                              {4} Sections
-                            </Typography>
-                            <KeyboardArrowDownIcon sx={{ opacity: 0.7 }} />
-                          </Stack>
                         </Stack>
                       </Box>
                     </ListItem>
-
-                    {/* nested */}
-                    {/* {group.sections && (
-                      <Box sx={{ px: 2 }}>
-                        {group.sections.map((s, si) => (
-                          <ListItemButton
-                            key={si}
-                            sx={{
-                              mb: 1,
-                              borderRadius: 1.5,
-                              bgcolor: s.active
-                                ? "rgba(166,250,18,0.06)"
-                                : "transparent",
-                              border: s.active
-                                ? "1px solid rgba(166,250,18,0.35)"
-                                : "1px solid rgba(255,255,255,0.06)",
-                            }}
-                          >
-                            <ListItemText
-                              primary={
-                                <Stack
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={1}
-                                >
-                                  <Typography
-                                    sx={{ fontSize: 12, opacity: 0.7 }}
-                                  >
-                                    {s.type}
-                                  </Typography>
-                                  <Typography sx={{ fontWeight: 700 }}>
-                                    {s.title}
-                                  </Typography>
-                                  <Box sx={{ flexGrow: 1 }} />
-                                  {s.state && (
-                                    <Typography
-                                      sx={{
-                                        fontSize: 12,
-                                        color: "#A6FA12",
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      {s.state}
-                                    </Typography>
-                                  )}
-                                </Stack>
-                              }
-                            />
-                          </ListItemButton>
-                        ))}
-                      </Box>
-                    )} */}
                   </Box>
                 ))}
               </List>
             </Box>
-          </Stack>
+          </Box>
         </Container>
 
         {/* STICKY bottom action bar */}
@@ -439,65 +295,100 @@ export default function ModulePage() {
             zIndex: 1200,
           }}
         >
-          <Container maxWidth="xl" sx={{ mr: 0 }}>
+          <Box>
             <Stack
               direction="row"
               alignItems="center"
               spacing={2}
-              justifyContent={"right"}
-              marginRight={0}
+              justifyContent={"space-between"}
+              marginRight={6}
+              marginLeft={6}
               paddingRight={1}
             >
-              <Box
-                sx={{
-                  ml: "auto",
-                  mr: 0,
-                  px: 1.5,
-                  py: 0.5,
-                  bgcolor: "rgba(255,255,255,0.06)",
-                  borderRadius: 999,
-                  fontSize: 13,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+              {moduleInfo?.currentSectionNumber === 1 ? (
+                <Box></Box>
+              ) : (
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    color: "#E6F1FF",
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.12)" },
+                  }}
+                  startIcon={<WestIcon />}
+                  onClick={() =>
+                    navigate(
+                      `/module/${moduleId}/section/${
+                        moduleInfo?.sections[
+                          moduleInfo.currentSectionNumber - 2
+                        ].id
+                      }`
+                    )
+                  }
+                >
+                  Previous
+                </Button>
+              )}
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
-                    width: 6,
-                    height: 6,
-                    bgcolor: "#A6FA12",
-                    borderRadius: "50%",
+                    ml: "auto",
+                    mr: 0,
+                    px: 1.5,
+                    py: 1,
+                    bgcolor: "rgba(255,255,255,0.06)",
+                    borderRadius: 999,
+                    fontSize: 13,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 1,
                   }}
-                />
-                +10
+                >
+                  <WhatshotIcon sx={{ color: "primary.main" }} />
+                  +10
+                </Box>
+                {moduleInfo?.currentSectionNumber ===
+                moduleInfo?.totalSectionsCount ? null : (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.08)",
+                      color: "#E6F1FF",
+                      boxShadow: "none",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.12)" },
+                    }}
+                    onClick={() =>
+                      navigate(
+                        `/module/${moduleId}/section/${
+                          moduleInfo?.sections[moduleInfo.currentSectionNumber]
+                            .id
+                        }`
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
+                )}
+
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#A6FA12",
+                    color: "#0A0F1E",
+                    fontWeight: 800,
+                    "&:hover": { bgcolor: "#9BE40F" },
+                  }}
+                >
+                  {moduleInfo?.currentSectionNumber ===
+                  moduleInfo?.totalSectionsCount
+                    ? "Finish"
+                    : "Mark Complete & Next"}
+                </Button>
               </Box>
-
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.08)",
-                  color: "#E6F1FF",
-                  boxShadow: "none",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.12)" },
-                }}
-              >
-                Next
-              </Button>
-
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#A6FA12",
-                  color: "#0A0F1E",
-                  fontWeight: 800,
-                  "&:hover": { bgcolor: "#9BE40F" },
-                }}
-              >
-                Mark Complete & Next
-              </Button>
             </Stack>
-          </Container>
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>

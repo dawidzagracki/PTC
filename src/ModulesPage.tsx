@@ -18,6 +18,7 @@ import {
   type ModuleListItemDto,
 } from "./Services/ModulesService";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const C = {
   bg: "#0A0F1E",
@@ -66,8 +67,12 @@ function ModuleCard(props: {
   primaryTags: string[];
   secondaryTags: string[];
   sections: string;
+  slug: string;
+  id: string;
 }) {
-  const { title, description, primaryTags, secondaryTags, sections } = props;
+  const { title, description, primaryTags, secondaryTags, sections, id } =
+    props;
+  const navigate = useNavigate();
 
   return (
     <Box
@@ -86,6 +91,18 @@ function ModuleCard(props: {
           boxShadow: "0 12px 25px rgba(0,0,0,0.35)",
         },
       }}
+      onClick={() =>
+        navigate(`/base-module-overview/${id}`, {
+          state: {
+            numberOfSections: sections,
+            name: title,
+            description: description,
+            difficulty: primaryTags,
+            tag: secondaryTags,
+            id: id,
+          },
+        })
+      }
     >
       <Box
         sx={{
@@ -255,6 +272,8 @@ export default function ModulesPage() {
                 secondaryTags={[item.type]}
                 sections={item.sectionsCount + " sections"}
                 key={index}
+                slug={item.slug}
+                id={item.id}
               />
             ))}
           </Box>

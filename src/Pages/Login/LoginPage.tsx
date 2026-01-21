@@ -15,18 +15,12 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Terminal,
-  WorkOutline,
-  Language,
-} from "@mui/icons-material";
+import GoogleIcon from "@mui/icons-material/Google";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import logo from "../../assets/logo.png";
 import { AuthService } from "../../Services/AuthService";
 import { useNavigate } from "react-router-dom";
-// import { GoogleLogin, googleLogout } from "@react-oauth/google";
-// import { useNavigate } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const theme = createTheme({
   palette: {
@@ -77,15 +71,24 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
-  // function handleLogout() {
-  //   googleLogout();
-  // }
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const result = await AuthService.googleLogin(tokenResponse.access_token);
+      if (result) {
+        console.log(result);
+        localStorage.setItem("accessToken", result.accessToken);
+        localStorage.setItem("accessTokenExpiresAt", result.expiresAt);
+        localStorage.setItem("email", result.email);
+        localStorage.setItem("fullName", result.fullName);
+        localStorage.setItem("username", result.userName);
+        navigate("/dashboard");
+      }
+    },
+    onError: () => console.log("Google Login Failed"),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setError(null);
-    // setLoading(true);
-
     const data = await AuthService.login({
       email: email,
       password: password,
@@ -210,26 +213,15 @@ export default function LoginPage() {
               <Button
                 fullWidth
                 variant="outlined"
-                startIcon={<Language />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
+                startIcon={<GoogleIcon />}
+                sx={{
+                  borderColor: "rgba(255, 255, 255, 0.55)",
+                  borderRadius: 1,
+                  color: "white",
+                }}
+                onClick={() => googleLogin()}
               >
                 Sign in with Google
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<WorkOutline />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
-              >
-                Sign in with LinkedIn
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Terminal />}
-                sx={{ borderColor: "rgba(255,255,255,0.16)" }}
-              >
-                Sign in with GitHub
               </Button>
             </Stack>
 
@@ -277,13 +269,6 @@ export default function LoginPage() {
               </Button>
             </Typography>
           </Box>
-          {/* <GoogleLogin
-            onSuccess={(credentialResponse) => {
-              console.log(credentialResponse);
-              navigate("/dashboard");
-            }}
-            onError={() => console.log("Failed")}
-          /> */}
         </Container>
       </Box>
     </ThemeProvider>

@@ -2,24 +2,41 @@ import {
   Box,
   Button,
   Chip,
-  Container,
   createTheme,
   CssBaseline,
   Divider,
   IconButton,
-  MenuItem,
   responsiveFontSizes,
-  Select,
   Stack,
   ThemeProvider,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
+  Menu,
+  MenuItem,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import React from "react";
+import RouteIcon from "@mui/icons-material/Route";
+import React, { useEffect, useState } from "react";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import SchoolIcon from "@mui/icons-material/School";
+import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
 import linux from "./assets/linux.png";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ClearIcon from "@mui/icons-material/Clear";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import {
+  getFilteredModules,
+  type FilteredModuleListItem,
+} from "./Services/ModulesService";
+import { useNavigate } from "react-router-dom";
+import PathsLibraryPage from "./PathsLibraryPage";
+import CertsLibraryPage from "./CertsLibraryPage";
 
 let theme = createTheme({
   palette: {
@@ -72,155 +89,342 @@ const colors = {
   border: "rgba(255,255,255,0.06)",
 };
 
-function Pill({ label }: { label: string }) {
-  return (
-    <Button
-      variant="outlined"
-      endIcon={<KeyboardArrowDownIcon />}
-      sx={{
-        borderColor: "rgba(255,255,255,0.12)",
-        color: colors.text,
-        bgcolor: colors.paper,
-        textTransform: "none",
-        px: 2,
-        height: 40,
-        borderRadius: 2,
-        "&:hover": { borderColor: "rgba(255,255,255,0.24)" },
-      }}
-    >
-      {label}
-    </Button>
-  );
-}
-
-function PillWithoutIcon({
+function FilterPill({
   label,
-  moduleToggle,
-  setModuleToggle,
+  options = [],
+  selected = [],
+  onToggle,
+  single = false,
 }: {
   label: string;
-  moduleToggle: boolean;
-  setModuleToggle: React.Dispatch<React.SetStateAction<boolean>>;
+  options?: string[];
+  selected: string[];
+  onToggle: (val: string) => void;
+  single?: boolean;
 }) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  return (
+    <>
+      <Button
+        variant="outlined"
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        endIcon={
+          <KeyboardArrowDownIcon
+            sx={{
+              ml: 1,
+              transform: open ? "rotate(180deg)" : "none",
+              transition: "0.2s",
+            }}
+          />
+        }
+        sx={{
+          borderColor: "transparent",
+          color: selected.length > 0 ? colors.lime : colors.text,
+          bgcolor: colors.paper,
+          textTransform: "none",
+          px: 2,
+          height: 50,
+          borderRadius: 2,
+          "&:hover": {
+            borderColor: "rgba(255,255,255,0.24)",
+            bgcolor: "#212b3b",
+          },
+        }}
+      >
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography>{label}</Typography>
+          {selected.length > 0 && !single && (
+            <Box
+              sx={{
+                bgcolor: colors.lime,
+                color: "#000",
+                borderRadius: "50%",
+                width: 20,
+                height: 20,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 800,
+              }}
+            >
+              {selected.length}
+            </Box>
+          )}
+        </Stack>
+      </Button>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={() => setAnchorEl(null)}
+        PaperProps={{
+          sx: {
+            bgcolor: "#1a2332",
+            minWidth: 220,
+            mt: 0.2,
+            border: "1px solid rgba(255,255,255,0.1)",
+          },
+        }}
+      >
+        {options.map((option) => (
+          <MenuItem
+            key={option}
+            onClick={() => {
+              onToggle(option);
+              if (single) setAnchorEl(null);
+            }}
+            sx={{ py: 1.2 }}
+          >
+            <ListItemText
+              primary={option}
+              primaryTypographyProps={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: selected.includes(option) ? colors.lime : "inherit",
+              }}
+            />
+            {!single && (
+              <Checkbox
+                checked={selected.includes(option)}
+                sx={{
+                  p: 0,
+                  color: "rgba(255,255,255,0.2)",
+                  "&.Mui-checked": { color: colors.lime },
+                }}
+              />
+            )}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
+
+function PillWithoutIcon({ label, moduleToggle, setModuleToggle }: any) {
   return (
     <Button
       variant="outlined"
       sx={{
-        borderColor: "rgba(255,255,255,0.12)",
+        borderColor: "transparent",
         color: colors.text,
-        bgcolor: moduleToggle ? colors.paper : colors.bg,
+        bgcolor: moduleToggle ? colors.paper : "transparent",
         textTransform: "none",
         px: 2,
-        height: 40,
+        height: 50,
         borderRadius: 2,
         "&:hover": { borderColor: "rgba(255,255,255,0.24)" },
       }}
-      onClick={() =>
-        setModuleToggle(label === "Favourite Modules" ? true : false)
-      }
+      onClick={() => setModuleToggle(label === "Favourite Modules")}
     >
       {label}
     </Button>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ModuleCard({ title, tags, difficulty, time, tier, progress }: any) {
+function ModuleCard({
+  title,
+  tags,
+  difficulty,
+  time,
+  tier,
+  isCompleted = false,
+  id,
+}: any) {
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
-        bgcolor: colors.paper,
-        border: `1px solid ${colors.border}`,
+        bgcolor: isCompleted ? "#0e1929ff" : colors.paper,
+        border: `0.1px solid ${isCompleted ? "#d3d3d32c" : colors.border}`,
         borderRadius: 2,
-        p: 2.5,
         minHeight: 240,
         display: "flex",
         flexDirection: "column",
-        gap: 1.5,
         position: "relative",
+        overflow: "hidden",
+        cursor: "pointer",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          "& .module-image": {
+            transform: "scale(1.015)",
+            filter: "brightness(0.85)",
+          },
+          "& .footer-stats": {
+            bgcolor: "rgba(255, 255, 255, 0.15)",
+            color: colors.text,
+          },
+        },
       }}
+      onClick={() => navigate(`/module-overview/${id}`)}
     >
-      <img src={linux} width="100%" />
-      {/* header badges */}
-      <Stack direction="row" spacing={1} alignItems="center">
-        {tags?.map((t: string) => (
-          <Chip
-            key={t}
-            size="small"
-            label={t}
-            sx={{ bgcolor: "#0A0F1E", color: colors.textDim, borderRadius: 1 }}
-          />
-        ))}
-        {progress && (
-          <Chip
-            size="small"
-            label={progress}
-            sx={{
-              ml: "auto",
-              bgcolor: "#2B2F45",
-              color: colors.text,
-              position: "absolute",
-              zIndex: 1,
-              top: 30,
-              right: 30,
-              borderRadius: 1,
-            }}
-          />
-        )}
-      </Stack>
-
-      {/* title */}
-      <Typography variant="h6" sx={{ fontWeight: 900 }}>
-        {title}
-      </Typography>
-
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{ color: colors.textDim, mt: "auto" }}
+      <Box
+        sx={{
+          p: 1.5,
+          pb: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1.5,
+        }}
       >
-        <Typography variant="body2">{difficulty}</Typography>
-        <Typography variant="body2">{time}</Typography>
-        <Typography variant="body2">{tier}</Typography>
-      </Stack>
-
-      <Divider sx={{ borderColor: colors.border, my: 1 }} />
-
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          sx={{ color: colors.textDim }}
-        >
+        <Box
+          src={linux}
+          component="img"
+          className="module-image"
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            transition: "transform 0.4s ease-in-out",
+          }}
+        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          {tags?.map((t: string) => (
+            <Chip
+              key={t}
+              size="small"
+              label={t}
+              sx={{
+                bgcolor: "#0A0F1E",
+                color: colors.textDim,
+                borderRadius: 1,
+              }}
+            />
+          ))}
+        </Stack>
+        <Typography variant="h6" sx={{ fontWeight: 900 }}>
+          {title}
+        </Typography>
+      </Box>
+      <Box
+        className="footer-stats"
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderTop: `1px solid ${colors.border}`,
+          px: 1.5,
+          py: 0.5,
+          mt: "auto",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {isCompleted ? (
           <Box
             sx={{
-              width: 10,
-              height: 10,
-              bgcolor: colors.lime,
-              borderRadius: "50%",
+              color: colors.textDim,
+              display: "flex",
+              gap: 1,
+              alignItems: "center",
             }}
-          />
-          <Typography variant="body2">Completed</Typography>
-        </Stack>
+          >
+            <CheckCircleIcon sx={{ color: colors.lime, width: 18 }} />
+            <Typography variant="body2" sx={{ color: colors.lime }}>
+              Completed
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              flexDirection: "row",
+              gap: 1,
+              display: "flex",
+              alignItems: "center",
+              color: colors.textDim,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                borderRight: `1px solid ${colors.border}`,
+                pr: 1,
+                gap: 0.5,
+                alignItems: "center",
+              }}
+            >
+              <BarChartIcon sx={{ width: 20 }} />{" "}
+              <Typography variant="body2">{difficulty}</Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                borderRight: `1px solid ${colors.border}`,
+                pr: 1,
+                gap: 0.5,
+                alignItems: "center",
+              }}
+            >
+              <WatchLaterIcon sx={{ width: 20 }} />{" "}
+              <Typography variant="body2">{time}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", pr: 1 }}>
+              <Typography variant="body2">{tier}</Typography>
+            </Box>
+          </Box>
+        )}
         <IconButton size="small" sx={{ color: colors.textDim }}>
-          <KeyboardArrowDownIcon />
+          <KeyboardArrowRightIcon />
         </IconButton>
-      </Stack>
+      </Box>
     </Box>
   );
 }
 
 export default function LibraryPage() {
-  const [alignment, setAlignment] = React.useState("web");
-  const [moduleToggle, setModuleToggle] = React.useState(false);
+  const [alignment, setAlignment] = useState("modules");
+  const [moduleToggle, setModuleToggle] = useState(false);
+  const [modules, setModules] = useState<FilteredModuleListItem[]>([]);
 
-  const handleChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newAlignment: string
-  ) => {
-    setAlignment(newAlignment);
+  // Stan filtrów
+  const [selectedFilters, setSelectedFilters] = useState<{
+    [key: string]: string[];
+  }>({
+    category: [],
+    difficulty: [],
+    tier: [],
+    type: [],
+    state: [],
+    sortBy: [],
+  });
+
+  useEffect(() => {
+    fetchPaths();
+  }, [selectedFilters]);
+
+  async function fetchPaths() {
+    const res = await getFilteredModules({
+      category: selectedFilters.category,
+      difficulty: selectedFilters.difficulty,
+      tier: selectedFilters.tier,
+      type: selectedFilters.type,
+      state: selectedFilters.state[0] || "",
+      sortBy: selectedFilters.sortBy[0] || "",
+    });
+    setModules(res);
+  }
+
+  const handleToggle = (key: string, val: string, single: boolean = false) => {
+    setSelectedFilters((prev) => {
+      if (single) return { ...prev, [key]: prev[key][0] === val ? [] : [val] };
+      const current = prev[key];
+      const next = current.includes(val)
+        ? current.filter((v) => v !== val)
+        : [...current, val];
+      return { ...prev, [key]: next };
+    });
   };
+
+  const clearFilters = () =>
+    setSelectedFilters({
+      category: [],
+      difficulty: [],
+      tier: [],
+      type: [],
+      state: [],
+      sortBy: [],
+    });
 
   return (
     <ThemeProvider theme={theme}>
@@ -236,142 +440,190 @@ export default function LibraryPage() {
           alignItems: "center",
         }}
       >
-        {/* Top app bar substitute */}
-
         <ToggleButtonGroup
+          value={alignment}
+          exclusive
+          onChange={(_, val) => val && setAlignment(val)}
           sx={{
             bgcolor: colors.paper,
             m: 3,
             mt: 5,
             borderRadius: 2,
-            display: "flex",
-            maxWidth: 1490,
+            height: 60,
             width: "100%",
+            maxWidth: 1250,
+            "& .MuiToggleButton-root": {
+              border: "none",
+              color: "gray",
+              flex: 1,
+              borderRadius: "8px !important",
+              mx: 0.5,
+              my: 0.5,
+              "&.Mui-selected": { color: "white", bgcolor: "#252f41ff" },
+            },
           }}
-          value={alignment}
-          exclusive
-          onChange={handleChange}
-          aria-label="Platform"
         >
-          <ToggleButton sx={{ minWidth: "33%" }} value="web">
-            Modules
+          <ToggleButton value="modules">
+            <ViewModuleIcon sx={{ mr: 0.75 }} /> Modules
           </ToggleButton>
-          <ToggleButton sx={{ minWidth: "34%" }} value="android">
-            Paths
+          <ToggleButton value="paths">
+            <RouteIcon sx={{ mr: 0.75 }} /> Paths
           </ToggleButton>
-          <ToggleButton sx={{ minWidth: "33%" }} value="ios">
-            Certifications
+          <ToggleButton value="certifications">
+            <SchoolIcon sx={{ mr: 0.75 }} /> Certifications
           </ToggleButton>
         </ToggleButtonGroup>
+        {alignment === "modules" && (
+          <Box maxWidth="1250px" sx={{ py: 6, width: "100%", px: 3 }}>
+            <Typography variant="h3" sx={{ fontWeight: 900, mb: 7 }}>
+              Modules
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <PillWithoutIcon
+                label="All Modules"
+                moduleToggle={!moduleToggle}
+                setModuleToggle={setModuleToggle}
+              />
+              <PillWithoutIcon
+                label="Favourite Modules"
+                moduleToggle={moduleToggle}
+                setModuleToggle={setModuleToggle}
+              />
+            </Stack>
+            <Divider sx={{ borderColor: colors.border, mb: 3 }} />
 
-        <Container maxWidth="xl" sx={{ py: 6 }}>
-          {/* Title */}
-          <Typography variant="h3" sx={{ fontWeight: 900, mb: 3 }}>
-            Modules
-          </Typography>
-
-          {/* Secondary tabs */}
-          <Stack direction="row" spacing={3} sx={{ mb: 3 }}>
-            <PillWithoutIcon
-              label="All Modules"
-              moduleToggle={!moduleToggle}
-              setModuleToggle={setModuleToggle}
-            />
-            <PillWithoutIcon
-              label="Favourite Modules"
-              moduleToggle={moduleToggle}
-              setModuleToggle={setModuleToggle}
-            />
-          </Stack>
-          <Divider sx={{ borderColor: colors.border, mb: 3 }} />
-
-          {/* Filters row */}
-          <Stack direction="row" spacing={2} sx={{ mb: 4, flexWrap: "wrap" }}>
-            <Pill label="Categories" />
-            <Pill label="Difficulty" />
-            <Pill label="Tiers" />
-            <Pill label="Type" />
-            <Pill label="State" />
-            <Pill label="Status" />
-
-            <Box sx={{ flexGrow: 1 }} />
             <Stack
               direction="row"
-              alignItems="center"
-              spacing={1}
-              sx={{ ml: "auto" }}
+              spacing={2}
+              sx={{ mb: 4, flexWrap: "wrap", gap: 1.5 }}
             >
-              <Typography variant="body2" sx={{ color: colors.textDim }}>
-                View By:
-              </Typography>
-              <Select
-                size="small"
-                value="Default"
-                sx={{
-                  color: colors.text,
-                  bgcolor: colors.paper,
-                  borderRadius: 2,
-
-                  ".MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(255,255,255,0.12)",
-                  },
-                }}
-              >
-                <MenuItem value="Default">Default</MenuItem>
-                <MenuItem value="Newest">Newest</MenuItem>
-              </Select>
+              <FilterPill
+                label="Categories"
+                options={["General", "DevOps", "Developer"]}
+                selected={selectedFilters.category}
+                onToggle={(v) => handleToggle("category", v)}
+              />
+              <FilterPill
+                label="Difficulty"
+                options={["Fundamental", "Easy", "Medium", "Hard", "Insane"]}
+                selected={selectedFilters.difficulty}
+                onToggle={(v) => handleToggle("difficulty", v)}
+              />
+              <FilterPill
+                label="Tiers"
+                options={["Tier 0", "Tier I", "Tier II", "Tier III", "Tier IV"]}
+                selected={selectedFilters.tier}
+                onToggle={(v) => handleToggle("tier", v)}
+              />
+              <FilterPill
+                label="Type"
+                options={["Regular"]}
+                selected={selectedFilters.type}
+                onToggle={(v) => handleToggle("type", v)}
+              />
+              <FilterPill
+                label="State"
+                options={["To Do", "In Progress", "Completed"]}
+                selected={selectedFilters.state}
+                onToggle={(v) => handleToggle("state", v, true)}
+                single
+              />
+              <Box sx={{ flexGrow: 1 }} />
+              <FilterPill
+                label={
+                  selectedFilters.sortBy[0]
+                    ? `View By: ${selectedFilters.sortBy[0]}`
+                    : "View By: Default"
+                }
+                options={[
+                  "Default",
+                  "Newest",
+                  "Difficulty: Low to High",
+                  "Difficulty: High to Low",
+                ]}
+                selected={selectedFilters.sortBy}
+                onToggle={(v) => handleToggle("sortBy", v, true)}
+                single
+              />
             </Stack>
-          </Stack>
-          <Typography fontSize={22} fontWeight={800}>
-            All Modules
-          </Typography>
-          {/* Cards grid */}
-          <Box
-            sx={{
-              display: "grid",
-              pt: 2,
-              gridTemplateColumns: {
-                xs: "1fr 1fr",
-                sm: "1fr 1fr 1fr",
-                lg: "1fr 1fr 1fr 1fr",
-              },
-              gap: 3,
-            }}
-          >
-            <ModuleCard
-              title="Learning Process"
-              tags={["REGULAR", "GENERAL"]}
-              difficulty="Easy"
-              time="6h"
-              tier="Tier 0"
-              progress=""
-            />
-            <ModuleCard
-              title="Intro To Academy"
-              tags={["REGULAR", "GENERAL"]}
-              difficulty="Easy"
-              time="6h"
-              tier="Tier 0"
-              progress=""
-            />
-            <ModuleCard
-              title="Hacking WordPress"
-              tags={["REGULAR", "OFFENSIVE"]}
-              difficulty="Easy"
-              time="6h"
-              tier="Tier II"
-              progress="In Progress"
-            />
-            <ModuleCard
-              title="Linux Fundamentals"
-              tags={["REGULAR", "GENERAL"]}
-              difficulty="Fundamental"
-              time="6h"
-              tier="Tier 0"
-              progress=""
-            />
+
+            {/* Aktywne filtry */}
+            {Object.values(selectedFilters).some((a) => a.length > 0) && (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ mb: 4, flexWrap: "wrap", gap: 1 }}
+              >
+                {Object.entries(selectedFilters).map(([key, vals]) =>
+                  vals.map((v) => (
+                    <Chip
+                      key={v}
+                      label={v}
+                      onDelete={() =>
+                        handleToggle(
+                          key,
+                          v,
+                          key === "state" || key === "sortBy"
+                        )
+                      }
+                      deleteIcon={<ClearIcon style={{ color: "white" }} />}
+                      sx={{ bgcolor: "#212b3b", borderRadius: 1 }}
+                    />
+                  ))
+                )}
+                <Button
+                  onClick={clearFilters}
+                  startIcon={<DeleteOutlineIcon />}
+                  sx={{ color: colors.textDim, ml: 2 }}
+                >
+                  Clear all filters
+                </Button>
+              </Stack>
+            )}
+
+            <Typography fontSize={22} fontWeight={800}>
+              {modules.length || 0} Modules
+            </Typography>
+            <Box
+              sx={{
+                display: "grid",
+                pt: 2,
+                gridTemplateColumns: {
+                  xs: "1fr 1fr",
+                  sm: "1fr 1fr 1fr",
+                  lg: "1fr 1fr 1fr 1fr",
+                },
+                gap: 3,
+              }}
+            >
+              {modules.map((module) => {
+                const moduleTags = [
+                  Array.isArray(module.category)
+                    ? module.category[0]
+                    : module.category || "GENERAL",
+                ];
+                if (module.type) {
+                  moduleTags.push(module.type);
+                }
+                return (
+                  <ModuleCard
+                    key={module.id}
+                    title={module.name}
+                    tags={moduleTags}
+                    difficulty={module.difficulty.substring(0, 4)}
+                    time={module.estimatedHours + "h"}
+                    tier={module.tier}
+                    isCompleted={module.userPercentCompleted === 100}
+                    id={module.id}
+                  />
+                );
+              })}
+            </Box>
           </Box>
-        </Container>
+        )}
+
+        {alignment === "paths" && <PathsLibraryPage />}
+        {alignment === "certifications" && <CertsLibraryPage />}
       </Box>
     </ThemeProvider>
   );

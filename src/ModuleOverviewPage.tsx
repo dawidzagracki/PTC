@@ -2,20 +2,24 @@ import {
   Box,
   Stack,
   Typography,
-  Container,
   Button,
   Divider,
   responsiveFontSizes,
   ThemeProvider,
   CssBaseline,
   createTheme,
-  Toolbar,
-  AppBar,
+  Container,
+  LinearProgress,
 } from "@mui/material";
-import logo from "./assets/logo.png";
 import linux from "./assets/linux.png";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  getModuleDetailsById,
+  type SimpleModuleDetails,
+} from "./Services/ModulesService";
+import SubNavMenu from "./Common/Navigation/SubNavMenu";
 
 let theme = createTheme({
   palette: {
@@ -57,60 +61,28 @@ let theme = createTheme({
   },
 });
 
-const navItems = ["Dashboard", "Library", "Resources"];
-
 theme = responsiveFontSizes(theme);
 
 export default function ModuleOverviewPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [moduleInfo, setModuleInfo] = useState<SimpleModuleDetails>();
+
+  useEffect(() => {
+    fetchModuleDetails();
+  }, []);
+
+  async function fetchModuleDetails() {
+    await getModuleDetailsById(id ?? "").then((module) => {
+      setModuleInfo(module);
+      console.log(module);
+    });
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar
-        position="sticky"
-        sx={{
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <Toolbar
-          sx={{
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-            backdropFilter: "blur(6px)",
-            minHeight: 72,
-          }}
-        >
-          <Box sx={{ width: 2, mr: 0 }} />
-          <Box sx={{ mr: 4 }}>
-            <img src={logo} width={90} />
-          </Box>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ display: { xs: "none", md: "flex" } }}
-          >
-            {navItems.map((label) => (
-              <Button
-                key={label}
-                color="inherit"
-                variant="text"
-                size="small"
-                sx={{ opacity: 0.9 }}
-              >
-                {label}
-              </Button>
-            ))}
-          </Stack>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          <Stack direction="row" spacing={1.5}>
-            <Button variant="contained" color="primary">
-              Upgrade
-            </Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+      <SubNavMenu />
       <Box
         sx={{
           bgcolor: "background.default",
@@ -119,54 +91,148 @@ export default function ModuleOverviewPage() {
         }}
       >
         {/* PAGE CONTENT */}
-        <Container maxWidth="xl" sx={{ mt: 6, pb: 10 }}>
+        <Container sx={{ mt: 12, pb: 10 }}>
           {/* HEADER SECTION */}
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-start",
+              width: "100%",
             }}
           >
-            <Box>
+            <Box sx={{ width: "35%" }}>
               {/* Tags */}
               <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
                 <Typography
                   sx={{ fontSize: 12, color: "#A6FA12", fontWeight: 700 }}
                 >
-                  REGULAR
+                  {moduleInfo?.category}
                 </Typography>
                 <Typography sx={{ fontSize: 12, opacity: 0.7 }}>
-                  GENERAL
+                  {moduleInfo?.type}
                 </Typography>
               </Stack>
 
               {/* Title */}
               <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
-                Linux Fundamentals
+                {moduleInfo?.name}
               </Typography>
+              {!moduleInfo?.isStarted && (
+                <>
+                  {/* Meta */}
+                  <Stack
+                    direction="row"
+                    spacing={3}
+                    sx={{ opacity: 0.75, mb: 2 }}
+                  >
+                    <Typography>{moduleInfo?.difficulty}</Typography>
+                    <Typography>{moduleInfo?.tier}</Typography>
+                    <Typography>
+                      Estimated {moduleInfo?.estimatedHours} Hours
+                    </Typography>
+                  </Stack>
 
-              {/* Meta */}
-              <Stack direction="row" spacing={3} sx={{ opacity: 0.75, mb: 2 }}>
-                <Typography>Fundamental</Typography>
-                <Typography>Tier 0</Typography>
-                <Typography>Estimated 6 hours</Typography>
-              </Stack>
+                  {/* Rating row */}
 
-              {/* Rating row */}
-              <Stack direction="row" spacing={3} sx={{ opacity: 0.75, mb: 3 }}>
-                <Typography>★★★★★ 229 Reviews</Typography>
-                <Typography>Last Updated 10 months ago</Typography>
-              </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={3}
+                    sx={{ opacity: 0.75, mb: 3 }}
+                  >
+                    <Typography>★★★★★ 229 Reviews</Typography>
+                    <Typography>Last Updated 10 months ago</Typography>
+                  </Stack>
+                </>
+              )}
+
+              {moduleInfo?.isStarted && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    mb: 3,
+                    mt: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1,
+                      justifyContent: "space-between",
+                      width: "100%",
+                    }}
+                  >
+                    <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: 14 }}>
+                      Module progress
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        mb: 0.5,
+                        fontSize: 14,
+                        color: "lime",
+                      }}
+                    >
+                      {moduleInfo?.userPercentCompleted}% completed
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={moduleInfo?.userPercentCompleted ?? 0}
+                    sx={{
+                      width: "100%",
+                      height: 13,
+                      mr: 1.5,
+                      borderRadius: 999,
+                      overflow: "hidden",
+                      backgroundColor: "#131a2a",
+                      backgroundImage:
+                        "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+                      backgroundSize: "14px 14px",
+                      "& .MuiLinearProgress-bar": {
+                        borderRadius: 999,
+                        backgroundColor: "rgba(255,255,255,0.18)",
+                        backgroundImage: "none",
+                      },
+                    }}
+                  />
+                </Box>
+              )}
 
               {/* Button + Favorite */}
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Button
-                  variant="contained"
-                  sx={{ bgcolor: "#A6FA12", color: "#0A0F1E", fontWeight: 700 }}
-                >
-                  Start Module
-                </Button>
+                {!moduleInfo?.isStarted ? (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "#A6FA12",
+                      color: "#0A0F1E",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Start Module
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: "#A6FA12",
+                      color: "#0A0F1E",
+                      fontWeight: 700,
+                    }}
+                    onClick={() =>
+                      navigate(
+                        `/module/${id}/section/${moduleInfo.currentSectionId}`
+                      )
+                    }
+                  >
+                    Continue Module
+                  </Button>
+                )}
+
                 <Box sx={{ ml: 3, mt: 1, cursor: "pointer" }}>
                   <FavoriteBorderIcon />
                 </Box>
@@ -209,31 +275,15 @@ export default function ModuleOverviewPage() {
                 Sections
               </Typography>
               <Typography sx={{ opacity: 0.7 }}>
-                30 sections · 21 Interactive
+                {moduleInfo?.sectionsCount} sections ·{" "}
+                {moduleInfo?.interactiveSectionsCount} Interactive
               </Typography>
             </Box>
-
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 700,
-                textDecoration: "underline",
-                cursor: "pointer",
-                mt: 4,
-              }}
-            >
-              Expand all sections
-            </Typography>
           </Stack>
 
           {/* SECTION LIST */}
           <Stack spacing={2}>
-            {[
-              { id: 1, title: "Introduction", count: 3 },
-              { id: 2, title: "The Shell", count: 3 },
-              { id: 3, title: "Linux Essentials", count: 4 },
-              { id: 4, title: "Users & Permissions", count: 3 },
-            ].map((section) => (
+            {moduleInfo?.sections.map((section) => (
               <Box
                 key={section.id}
                 sx={{
@@ -262,20 +312,13 @@ export default function ModuleOverviewPage() {
                         color: "#ffffffff",
                       }}
                     >
-                      {section.id}
+                      {section.orderIndex}
                     </Box>
 
                     <Typography sx={{ fontWeight: 700 }}>
-                      {section.title}
+                      {section.name}
                     </Typography>
                   </Box>
-
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Typography sx={{ opacity: 0.7 }}>
-                      {section.count} Sections
-                    </Typography>
-                    <KeyboardArrowDownIcon sx={{ opacity: 0.7 }} />
-                  </Stack>
                 </Stack>
               </Box>
             ))}
@@ -290,7 +333,9 @@ export default function ModuleOverviewPage() {
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <Typography>Earn</Typography>
-              <Typography sx={{ color: "#9AF80B" }}>10 Cubes</Typography>
+              <Typography sx={{ color: "#9AF80B" }}>
+                {moduleInfo?.reward} Cubes
+              </Typography>
               <Typography>back, when you complete this module</Typography>
             </Box>
             <Button
