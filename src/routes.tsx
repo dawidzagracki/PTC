@@ -28,10 +28,13 @@ import BadgesPage from "./BadgesPage";
 import InProgressPage from "./InProgressPage";
 import ExamsPage from "./ExamsPage";
 import CubesPage from "./CubesPage";
+import ScrollToTop from "./Common/ScrollToTop";
 
 export default function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<MainSite />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register-step-1" element={<RegisterPage />} />
@@ -75,5 +78,6 @@ export default function AppRoutes() {
       {/* 404 lub redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
