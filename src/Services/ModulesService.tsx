@@ -117,6 +117,7 @@ export type FilteredModuleListItem = {
   interactiveSectionsCount: number;
   userPercentCompleted: number;
   userState: string;
+  isFavourite: boolean;
 };
 
 export async function getModuleDetailsById(moduleId: string) {
@@ -158,4 +159,11 @@ export async function getFilteredModules(moduleFilters: ModuleFilters) {
       `/Modules/filtered?category=${moduleFilters.category}&difficulty=${moduleFilters.difficulty}&tier=${moduleFilters.tier}&type=${moduleFilters.type}&state=${moduleFilters.state}&sortBy=${moduleFilters.sortBy}`
     )
     .then((r) => r.data);
+}
+
+export async function toggleModuleFavourite(moduleId: string): Promise<boolean> {
+  const response = await http.post<{ isFavourite: boolean }>(
+    `/Modules/${moduleId}/toggle-favourite`
+  );
+  return response.data.isFavourite;
 }

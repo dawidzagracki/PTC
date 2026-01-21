@@ -30,8 +30,11 @@ import linux from "./assets/linux.png";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import {
   getFilteredModules,
+  toggleModuleFavourite,
   type FilteredModuleListItem,
 } from "./Services/ModulesService";
 import { useNavigate } from "react-router-dom";
@@ -232,8 +235,34 @@ function ModuleCard({
   tier,
   isCompleted = false,
   id,
-}: any) {
+  isFavourite = false,
+  onFavouriteToggle,
+}: {
+  title: string;
+  tags: string[];
+  difficulty: string;
+  time: string;
+  tier: string;
+  isCompleted?: boolean;
+  id: string;
+  isFavourite?: boolean;
+  onFavouriteToggle?: (moduleId: string) => void;
+}) {
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+  const [favourite, setFavourite] = useState(isFavourite);
+
+  useEffect(() => {
+    setFavourite(isFavourite);
+  }, [isFavourite]);
+
+  const handleFavouriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onFavouriteToggle) {
+      onFavouriteToggle(id);
+      setFavourite(!favourite);
+    }
+  };
 
   return (
     <Box
@@ -260,7 +289,32 @@ function ModuleCard({
         },
       }}
       onClick={() => navigate(`/module-overview/${id}`)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Serce w prawym górnym rogu */}
+      {(isHovered || favourite) && (
+        <IconButton
+          onClick={handleFavouriteClick}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 10,
+            bgcolor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(4px)",
+            "&:hover": {
+              bgcolor: "rgba(0, 0, 0, 0.7)",
+            },
+          }}
+        >
+          {favourite ? (
+            <FavoriteIcon sx={{ color: "#FF1744" }} />
+          ) : (
+            <FavoriteBorderIcon sx={{ color: colors.text }} />
+          )}
+        </IconButton>
+      )}
       <Box
         sx={{
           p: 1.5,
@@ -390,10 +444,10 @@ export default function LibraryPage() {
   });
 
   useEffect(() => {
-    fetchPaths();
-  }, [selectedFilters]);
+    fetchModules();
+  }, [selectedFilters, moduleToggle]);
 
-  async function fetchPaths() {
+  async function fetchModules() {
     const res = await getFilteredModules({
       category: selectedFilters.category,
       difficulty: selectedFilters.difficulty,
@@ -402,8 +456,29 @@ export default function LibraryPage() {
       state: selectedFilters.state[0] || "",
       sortBy: selectedFilters.sortBy[0] || "",
     });
-    setModules(res);
+    
+    // Jeśli wybrano "Favourite Modules", filtruj tylko ulubione
+    let filteredRes = res;
+    if (moduleToggle) {
+      filteredRes = res.filter((m) => m.isFavourite);
+    }
+    
+    setModules(filteredRes);
   }
+
+  const handleFavouriteToggle = async (moduleId: string) => {
+    try {
+      const newFavouriteState = await toggleModuleFavourite(moduleId);
+      // Aktualizuj stan lokalny modułu
+      setModules((prevModules) =>
+        prevModules.map((m) =>
+          m.id === moduleId ? { ...m, isFavourite: newFavouriteState } : m
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling favourite:", error);
+    }
+  };
 
   const handleToggle = (key: string, val: string, single: boolean = false) => {
     setSelectedFilters((prev) => {
@@ -615,6 +690,8 @@ export default function LibraryPage() {
                     tier={module.tier}
                     isCompleted={module.userPercentCompleted === 100}
                     id={module.id}
+                    isFavourite={module.isFavourite}
+                    onFavouriteToggle={handleFavouriteToggle}
                   />
                 );
               })}
