@@ -23,8 +23,9 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import LogoutIcon from "@mui/icons-material/Logout";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AuthService } from "../../Services/AuthService";
+import type { CurrentUser } from "../../Models/CurrentUser";
 
 const navItems = [
   {
@@ -46,9 +47,23 @@ export default function SubNavMenu() {
   const location = useLocation();
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const resourcesOpen = Boolean(anchorEl);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await AuthService.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -193,7 +208,7 @@ export default function SubNavMenu() {
         <HelpOutlineIcon sx={{ color: "rgba(255, 255, 255, 0.51)", mr: 1 }} />
         <Box sx={{ display: "flex", alignItems: "center", mr: 3, gap: 0 }}>
           <img src={cyberchip} height={40} />
-          <Typography>20</Typography>
+          <Typography>{currentUser?.cyberChipAmount ?? 0}</Typography>
         </Box>
         <Stack direction="row" spacing={1.5} sx={{ mr: 1 }}>
           <Button

@@ -2,6 +2,7 @@ import { http } from "../api/http";
 import type { AuthResponse } from "../Models/AuthResponse";
 import type { LoginRequest } from "../Models/LoginRequest";
 import type { RegisterRequest } from "../Models/RegisterRequest ";
+import type { CurrentUser } from "../Models/CurrentUser";
 
 export const AuthService = {
   async register(payload: RegisterRequest): Promise<AuthResponse> {
@@ -31,8 +32,8 @@ export const AuthService = {
     return response.data;
   },
 
-  async me() {
-    const response = await http.get("/auth/me");
+  async me(): Promise<CurrentUser> {
+    const response = await http.get<CurrentUser>("/auth/me");
     return response.data;
   },
 };
