@@ -81,7 +81,7 @@ export default function LoginPage() {
         localStorage.setItem("email", result.email);
         localStorage.setItem("fullName", result.fullName);
         localStorage.setItem("username", result.userName);
-        navigate("/dashboard");
+        navigate(result.isOnBoarded ? "/dashboard" : "/welcome");
       }
     },
     onError: () => console.log("Google Login Failed"),

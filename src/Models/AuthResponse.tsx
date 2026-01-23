@@ -5,4 +5,5 @@ export interface AuthResponse {
   fullName: string;
   email: string;
   isEmailConfirmed: boolean;
+  isOnBoarded: boolean;
 }
