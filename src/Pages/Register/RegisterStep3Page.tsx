@@ -103,7 +103,7 @@ export default function RegisterStep3Page() {
     countryCode
       .toUpperCase()
       .replace(/./g, (char) =>
-        String.fromCodePoint(127397 + char.charCodeAt(0))
+        String.fromCodePoint(127397 + char.charCodeAt(0)),
       );
 
   const { state } = useLocation();
@@ -139,7 +139,16 @@ export default function RegisterStep3Page() {
 
     if (data) {
       console.log("Registered & logged in:", data);
-      navigate("/email-verification", { state: { email: email } });
+      if (data.isEmailConfirmed) {
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("accessTokenExpiresAt", data.expiresAt);
+        localStorage.setItem("email", data.email);
+        localStorage.setItem("fullName", data.fullName);
+        localStorage.setItem("username", data.userName);
+        navigate("/dashboard");
+      } else {
+        navigate("/email-verify", { state: { email: email } });
+      }
     }
   };
 

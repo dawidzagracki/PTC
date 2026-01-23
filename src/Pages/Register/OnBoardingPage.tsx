@@ -12,6 +12,9 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { completeOnboarding } from "../../Services/OnboardingService";
+import type { OnboardingRequest } from "../../Models/OnboardingRequest";
 
 const theme = createTheme({
   palette: {
@@ -50,24 +53,158 @@ const theme = createTheme({
   },
 });
 
-const OPTIONS = [
-  "Start learning cybersecurity",
-  "Train and improve my cybersecurity skills",
-  "Earn industry-recognized certifications",
-  "Connect with other cyber professionals and enthusiasts",
-  "Explore job opportunities in cybersecurity",
-  "Challenge myself in cyber competitions",
-  "I am looking for team training solutions",
-  "Something else",
+type StepKey =
+  | "experienceLevels"
+  | "learningGoals"
+  | "availability"
+  | "techInterests"
+  | "dreamProjects";
+
+const STEPS: {
+  key: StepKey;
+  question: string;
+  options: string[];
+}[] = [
+  {
+    key: "experienceLevels",
+    question:
+      "Jak wygląda Twoja dotychczasowa styczność z kodem i IT? (Max 3)",
+    options: [
+      "Zero absolutne: Nigdy nie widziałem/am kodu.",
+      "Excel Master: Nie programuję, ale świetnie radzę sobie z Excelem.",
+      "Edytor CMS: Wordpress/Wix bez kodowania.",
+      "HTML/CSS: Edytowałem/am wygląd strony.",
+      "Tutorial Hell: Robię kursy, ale nie umiem pisać sam/a.",
+      "Studia/Szkoła: Miałem/am programowanie w edukacji.",
+      "Skrypty/Automatyzacja: Pisałem/am proste skrypty.",
+      "Inna branża IT: Pracuję w IT (PM, HR), ale nietechnicznie.",
+    ],
+  },
+  {
+    key: "learningGoals",
+    question: "Co jest Twoim głównym celem? (Max 3)",
+    options: [
+      "Pierwsza praca: Junior Developer na etacie.",
+      "Freelancing: Dorabianie po godzinach.",
+      "Własny Startup: Budowa MVP.",
+      "Przebranżowienie wewnętrzne: Awans w obecnej firmie.",
+      "Automatyzacja: Automatyzacja nudnej pracy.",
+      "Hobby i rozwój: Trening logicznego myślenia.",
+      "Dla dzieci/rodziny: Nauka dla bliskich.",
+      "Przyszłość / AI: Nauka sterowania AI.",
+    ],
+  },
+  {
+    key: "availability",
+    question: "Ile czasu tygodniowo realnie poświęcisz na naukę? (Max 3)",
+    options: [
+      "Mikro-nauka: Do 2h.",
+      "Weekendowy wojownik: 3-5h.",
+      "Spokojne tempo: 5-8h.",
+      "Solidna nauka: 8-12h.",
+      "Pół etatu: 15-20h.",
+      "Tryb Bootcamp: 20-30h.",
+      "Full Time: 40+h.",
+      "Nieregularnie: Nauka zrywami.",
+    ],
+  },
+  {
+    key: "techInterests",
+    question: "Jaka dziedzina IT interesuje Cię najbardziej? (Max 3)",
+    options: [
+      "Frontend: Wygląd i interakcje.",
+      "Backend: Logika i serwery.",
+      "Fullstack: Frontend + Backend.",
+      "Aplikacje Mobilne: iOS/Android.",
+      "Game Dev: Gry.",
+      "Data Science / AI: Analiza danych i AI.",
+      "QA / Testowanie: Testowanie oprogramowania.",
+      "Nie mam pojęcia: Doradźcie mi.",
+    ],
+  },
+  {
+    key: "dreamProjects",
+    question: "Co stworzyłbyś/ałabyś jako pierwsze? (Max 3)",
+    options: [
+      "Własna strona wizytówka.",
+      "Sklep internetowy.",
+      "Prosta gra.",
+      "Aplikacja \"To-Do\".",
+      "Bot / Automat.",
+      "Klon znanej apki (Instagram/Uber).",
+      "Narzędzie finansowe.",
+      "Nic konkretnego (zagadki logiczne).",
+    ],
+  },
 ];
 
 export default function OnBoardingPage() {
-  const [selected, setSelected] = React.useState<string[]>([]);
+  const navigate = useNavigate();
+  const [stepIndex, setStepIndex] = React.useState(0);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [selections, setSelections] = React.useState<
+    Record<StepKey, string[]>
+  >({
+    experienceLevels: [],
+    learningGoals: [],
+    availability: [],
+    techInterests: [],
+    dreamProjects: [],
+  });
 
-  const toggleOption = (label: string) => {
-    setSelected((prev) =>
-      prev.includes(label) ? prev.filter((x) => x !== label) : [...prev, label],
-    );
+  const currentStep = STEPS[stepIndex];
+  const selected = selections[currentStep.key];
+  const selectedCount = selected.length;
+  const isMaxSelected = selectedCount >= 3;
+  const progressValue = ((stepIndex + 1) / STEPS.length) * 100;
+
+  const toggleOption = (key: StepKey, label: string) => {
+    setSelections((prev) => {
+      const current = prev[key];
+      const isSelected = current.includes(label);
+
+      if (isSelected) {
+        return { ...prev, [key]: current.filter((x) => x !== label) };
+      }
+
+      if (current.length >= 3) {
+        return prev;
+      }
+
+      return { ...prev, [key]: [...current, label] };
+    });
+  };
+
+  const handleContinue = async () => {
+    setError(null);
+
+    if (stepIndex < STEPS.length - 1) {
+      setStepIndex((prev) => prev + 1);
+      return;
+    }
+
+    const payload: OnboardingRequest = {
+      experienceLevels: selections.experienceLevels,
+      learningGoals: selections.learningGoals,
+      availability: selections.availability,
+      techInterests: selections.techInterests,
+      dreamProjects: selections.dreamProjects,
+    };
+
+    try {
+      setIsSubmitting(true);
+      await completeOnboarding(payload);
+      navigate("/dashboard");
+    } catch {
+      setError("Nie udało się zapisać onboardingu. Spróbuj ponownie.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSkip = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -96,25 +233,43 @@ export default function OnBoardingPage() {
           >
             {/* LEWA KOLUMNA - SZERSZA (flex: 2) */}
             <Box sx={{ flex: 2, width: "100%", mr: { md: 3 } }}>
+              {error && (
+                <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+                  {error}
+                </Typography>
+              )}
               <Typography
                 variant="h5"
                 sx={{ fontWeight: 600, mb: 1, letterSpacing: 0.4 }}
               >
-                Why have you joined Path The Code?
+                {currentStep.question}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Select one or more options
-              </Typography>
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                sx={{ mb: 3 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Wybierz maksymalnie 3 opcje
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Wybrano: {selectedCount}/3
+                </Typography>
+              </Stack>
 
               <Stack spacing={1.2}>
-                {OPTIONS.map((label) => {
+                {currentStep.options.map((label) => {
                   const checked = selected.includes(label);
+                  const isDisabled = !checked && isMaxSelected;
                   return (
                     <Paper
                       key={label}
-                      onClick={() => toggleOption(label)}
+                      onClick={() =>
+                        isDisabled ? undefined : toggleOption(currentStep.key, label)
+                      }
                       sx={{
-                        cursor: "pointer",
+                        cursor: isDisabled ? "not-allowed" : "pointer",
                         borderRadius: 1,
                         px: 2.5,
                         py: 1.75,
@@ -126,9 +281,10 @@ export default function OnBoardingPage() {
                           ? "primary.main"
                           : "rgba(255,255,255,0.06)",
                         bgcolor: "#141d2f",
+                        opacity: isDisabled ? 0.6 : 1,
                         "&:hover": {
-                          borderColor: "primary.main",
-                          bgcolor: "#182337",
+                          borderColor: isDisabled ? "rgba(255,255,255,0.06)" : "primary.main",
+                          bgcolor: isDisabled ? "#141d2f" : "#182337",
                         },
                       }}
                       elevation={0}
@@ -165,6 +321,7 @@ export default function OnBoardingPage() {
                     "&:hover": { bgcolor: "transparent", color: "#ffffff" },
                     mr: 4,
                   }}
+                  onClick={handleSkip}
                 >
                   Skip onboarding
                 </Button>
@@ -177,8 +334,14 @@ export default function OnBoardingPage() {
                     py: 0.75,
                     "&:hover": { bgcolor: "#2b3a54" },
                   }}
+                  disabled={selectedCount === 0 || isSubmitting}
+                  onClick={handleContinue}
                 >
-                  Continue
+                  {stepIndex < STEPS.length - 1
+                    ? "Continue"
+                    : isSubmitting
+                      ? "Saving..."
+                      : "Finish"}
                 </Button>
               </Box>
             </Box>
@@ -244,7 +407,7 @@ export default function OnBoardingPage() {
                     <Box sx={{ flexGrow: 1 }}>
                       <LinearProgress
                         variant="determinate"
-                        value={20}
+                        value={progressValue}
                         sx={{
                           height: 4,
                           borderRadius: 999,
@@ -259,7 +422,7 @@ export default function OnBoardingPage() {
                       variant="caption"
                       sx={{ fontSize: 11, fontWeight: 500 }}
                     >
-                      1 / 5 steps completed
+                      {stepIndex + 1} / {STEPS.length} steps completed
                     </Typography>
                   </Box>
                 </Paper>
