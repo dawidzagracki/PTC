@@ -64,7 +64,7 @@ export default function AppRoutes() {
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/email-verify" element={<EmailVerifyPage />} />
-      <Route path="/welcome" element={<WelcomePage />} />
+      <Route path="/welcome/*" element={<WelcomePage />} />
       <Route path="/on-boarding" element={<OnBoardingPage />} />
       <Route path="/path/:id" element={<PathOverviewPage />} />
       <Route

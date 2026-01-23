@@ -231,6 +231,7 @@ export default function LoginPage() {
               <Button
                 size="small"
                 sx={{ p: 0, minWidth: 0, color: "#A6FA12", fontWeight: 800 }}
+                onClick={() => navigate("/register-step-1")}
               >
                 Create Account
               </Button>

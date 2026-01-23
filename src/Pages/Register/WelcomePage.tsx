@@ -1,6 +1,7 @@
 import { Box, CssBaseline, ThemeProvider, Typography, createTheme } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { http } from "../../api/http";
 
 const theme = createTheme({
   palette: {
@@ -24,10 +25,34 @@ const theme = createTheme({
 });
 
 export default function WelcomePage() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [fadeIn, setFadeIn] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const userName = localStorage.getItem("username") ?? "";
+  const confirmSentRef = useRef(false);
+  const token = useMemo(() => {
+    const queryToken = new URLSearchParams(location.search).get("token");
+    if (queryToken) {
+      return queryToken;
+    }
+
+    const pathMatch = location.pathname.match(/token=([^/]+)/i);
+    return pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    if (confirmSentRef.current) {
+      return;
+    }
+    confirmSentRef.current = true;
+
+    void http.get("/emailconfirmation/confirm", { params: { token } });
+  }, [token]);
 
   useEffect(() => {
     const showTimer = window.setTimeout(() => setFadeIn(true), 80);

@@ -193,6 +193,7 @@ export default function RegisterStep1Page() {
               <Button
                 size="small"
                 sx={{ p: 0, minWidth: 0, color: "#A6FA12", fontWeight: 800 }}
+                onClick={() => navigate("/login")}
               >
                 Sign In
               </Button>
