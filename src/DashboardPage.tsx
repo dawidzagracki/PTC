@@ -38,6 +38,7 @@ import {
   type SectionWithUserProgressDto,
 } from "./Services/ModulesService";
 import { useNavigate } from "react-router-dom";
+import default_module from "./assets/default_module.png";
 // import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 
 // Colors & tokens (HTB-like)
@@ -50,6 +51,33 @@ const C = {
   border: "rgba(255,255,255,0.06)",
   borderSoft: "rgba(255,255,255,0.04)",
 };
+
+const moduleImages = import.meta.glob(
+  ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" }
+) as Record<string, string>;
+
+const pathImages = import.meta.glob(
+  ["./assets/paths/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" }
+) as Record<string, string>;
+
+const toSlugMap = (images: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(images).map(([path, url]) => {
+      const fileName = path.split("/").pop() ?? "";
+      const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+      return [slug, url];
+    })
+  );
+
+const moduleImageMap = toSlugMap(moduleImages);
+const pathImageMap = toSlugMap(pathImages);
+
+const getModuleImage = (slug?: string | null) =>
+  slug ? moduleImageMap[slug.toLowerCase()] ?? default_module : default_module;
+const getPathImage = (slug?: string | null) =>
+  slug ? pathImageMap[slug.toLowerCase()] ?? default_module : default_module;
 
 let theme = createTheme({
   palette: {
@@ -472,8 +500,16 @@ export default function DashboardPage() {
                           borderRadius: 2,
                           bgcolor: "#0A0F1E",
                           border: `1px solid ${C.borderSoft}`,
+                          overflow: "hidden",
                         }}
-                      />
+                      >
+                        <Box
+                          component="img"
+                          src={getPathImage(paths?.slug)}
+                          alt={paths?.name ?? "Path"}
+                          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </Box>
                       <Box>
                         <Stack
                           direction="row"
@@ -644,8 +680,16 @@ export default function DashboardPage() {
                           borderRadius: 2,
                           bgcolor: "#0A0F1E",
                           border: `1px solid ${C.borderSoft}`,
+                          overflow: "hidden",
                         }}
-                      />
+                      >
+                        <Box
+                          component="img"
+                          src={getModuleImage(module?.slug)}
+                          alt={module?.name ?? "Module"}
+                          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </Box>
                       <Box>
                         <Stack
                           direction="row"
