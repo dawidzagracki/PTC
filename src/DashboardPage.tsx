@@ -241,11 +241,13 @@ function Row({
   complete,
   tag,
   moduleId,
+  moduleSlug,
 }: {
   title: string;
   complete?: boolean;
   tag: string;
   moduleId: string;
+  moduleSlug: string;
 }) {
   const navigate = useNavigate();
 
@@ -267,8 +269,16 @@ function Row({
           bgcolor: "#0A0F1E",
           border: `1px solid ${C.borderSoft}`,
           mr: 2,
+          overflow: "hidden",
         }}
-      />
+      >
+        <Box
+          component="img"
+          src={getModuleImage(moduleSlug)}
+          alt={title}
+          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </Box>
 
       <Box sx={{ flex: 1, mr: 2 }}>
         <Stack direction="column" spacing={1} justifyContent={"left"}>
@@ -602,6 +612,7 @@ export default function DashboardPage() {
                           tag={x.tag}
                           key={i}
                           moduleId={module?.id ?? ""}
+                          moduleSlug={x.moduleSlug}
                         />
                       )
                     )}

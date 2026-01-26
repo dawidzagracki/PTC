@@ -33,6 +33,7 @@ export interface PathDetailsDto {
 
 export interface PathModuleWithProgressDto {
   moduleId: string;
+  moduleSlug: string;
   moduleName: string;
   moduleDescription?: string | null;
   tag: string;
