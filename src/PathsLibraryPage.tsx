@@ -22,6 +22,7 @@ import {
   type UserPathsListsDto,
 } from "./Services/PathsService";
 import { useNavigate } from "react-router-dom";
+import default_module from "./assets/default_module.png";
 
 const C = {
   bg: "#0F1726",
@@ -80,8 +81,25 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
+const pathImages = import.meta.glob(
+  ["./assets/paths/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" }
+) as Record<string, string>;
+
+const pathImageMap = Object.fromEntries(
+  Object.entries(pathImages).map(([path, url]) => {
+    const fileName = path.split("/").pop() ?? "";
+    const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+    return [slug, url];
+  })
+);
+
+const getPathImage = (slug: string) =>
+  pathImageMap[slug.toLowerCase()] ?? default_module;
+
 type PathCard = {
   id: string;
+  slug: string;
   title: string;
   desc: string;
   difficulty: string;
@@ -119,24 +137,6 @@ function TabButton(props: {
     >
       {label}
     </Button>
-  );
-}
-
-function ImagePlaceholder() {
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "100%",
-        borderRadius: 2,
-        bgcolor: C.card2,
-        border: `1px solid ${C.border}`,
-        background:
-          "radial-gradient(650px 180px at 35% 30%, rgba(255,255,255,0.07) 0%, rgba(16,24,39,0) 55%)," +
-          "repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 10px)",
-        opacity: 0.95,
-      }}
-    />
   );
 }
 
@@ -256,7 +256,18 @@ function EnrolledCardLarge(props: { card: PathCard }) {
             bgcolor: "rgba(16,24,39,0.25)",
           }}
         >
-          <ImagePlaceholder />
+          <Box
+            component="img"
+            src={getPathImage(card.slug)}
+            alt={card.title}
+            sx={{
+              width: "100%",
+              height: "100%",
+              borderRadius: 2,
+              objectFit: "cover",
+              border: `1px solid ${C.border}`,
+            }}
+          />
         </Box>
 
         <Box sx={{ pt: 2.5, pr: 1, position: "relative" }}>
@@ -432,6 +443,7 @@ export default function PathsLibraryPage() {
                   <EnrolledCardLarge
                     card={{
                       id: path.id,
+                      slug: path.slug,
                       title: path.name,
                       desc: path.description || "",
                       difficulty: path.difficulty,
@@ -464,6 +476,7 @@ export default function PathsLibraryPage() {
                   <EnrolledCardLarge
                     card={{
                       id: path.id,
+                      slug: path.slug,
                       title: path.name,
                       desc: path.description || "",
                       difficulty: path.difficulty,

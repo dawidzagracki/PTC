@@ -17,6 +17,7 @@ import {
   type CertificateListItemWithUserProgressDto,
 } from "./Services/CertificatesService";
 import { useNavigate } from "react-router-dom";
+import default_module from "./assets/default_module.png";
 
 const C = {
   bg: "#0F1726",
@@ -71,6 +72,30 @@ let theme = createTheme({
 });
 
 theme = responsiveFontSizes(theme);
+
+const certImages = import.meta.glob(
+  ["./assets/certifications/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" }
+) as Record<string, string>;
+
+const certImageMap = Object.fromEntries(
+  Object.entries(certImages).map(([path, url]) => {
+    const fileName = path.split("/").pop() ?? "";
+    const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+    return [slug, url];
+  })
+);
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+
+const getCertImage = (name: string) =>
+  certImageMap[slugify(name)] ?? default_module;
 
 export default function CertsLibraryPage() {
   const navigate = useNavigate();
@@ -216,10 +241,11 @@ export default function CertsLibraryPage() {
                   <Box
                     sx={{
                       position: "relative",
-                      background:
-                        "linear-gradient(135deg, rgba(255,66,66,0.95) 0%, rgba(60,20,40,0.95) 65%, rgba(10,15,30,0.95) 100%)",
                       borderRight: { xs: "none", md: `1px solid ${C.border}` },
                       minHeight: { xs: 210, md: "100%" },
+                      backgroundImage: `linear-gradient(135deg, rgba(255,66,66,0.85) 0%, rgba(60,20,40,0.85) 65%, rgba(10,15,30,0.85) 100%), url(${getCertImage(x.name)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                     }}
                   >
                     {/* subtle dot/mesh */}
