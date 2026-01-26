@@ -26,7 +26,7 @@ import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import SchoolIcon from "@mui/icons-material/School";
 import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
-import linux from "./assets/linux.png";
+import default_module from "./assets/default_module.png";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -91,6 +91,22 @@ const colors = {
   lime: "#A6FA12",
   border: "rgba(255,255,255,0.06)",
 };
+
+const moduleImages = import.meta.glob(
+  ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const moduleImageMap = Object.fromEntries(
+  Object.entries(moduleImages).map(([path, url]) => {
+    const fileName = path.split("/").pop() ?? "";
+    const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+    return [slug, url];
+  }),
+);
+
+const getModuleImage = (slug: string) =>
+  moduleImageMap[slug.toLowerCase()] ?? default_module;
 
 function FilterPill({
   label,
@@ -235,6 +251,7 @@ function ModuleCard({
   tier,
   isCompleted = false,
   id,
+  imageSrc,
   isFavourite = false,
   onFavouriteToggle,
 }: {
@@ -245,6 +262,7 @@ function ModuleCard({
   tier: string;
   isCompleted?: boolean;
   id: string;
+  imageSrc: string;
   isFavourite?: boolean;
   onFavouriteToggle?: (moduleId: string) => void;
 }) {
@@ -325,7 +343,7 @@ function ModuleCard({
         }}
       >
         <Box
-          src={linux}
+          src={imageSrc}
           component="img"
           className="module-image"
           sx={{
@@ -430,7 +448,7 @@ export default function LibraryPage() {
   const location = useLocation();
   const [alignment, setAlignment] = useState("modules");
   const [moduleToggle, setModuleToggle] = useState(
-    (location.state as { showFavourites?: boolean })?.showFavourites ?? false
+    (location.state as { showFavourites?: boolean })?.showFavourites ?? false,
   );
   const [modules, setModules] = useState<FilteredModuleListItem[]>([]);
 
@@ -459,13 +477,13 @@ export default function LibraryPage() {
       state: selectedFilters.state[0] || "",
       sortBy: selectedFilters.sortBy[0] || "",
     });
-    
+
     // Jeśli wybrano "Favourite Modules", filtruj tylko ulubione
     let filteredRes = res;
     if (moduleToggle) {
       filteredRes = res.filter((m) => m.isFavourite);
     }
-    
+
     setModules(filteredRes);
   }
 
@@ -475,8 +493,8 @@ export default function LibraryPage() {
       // Aktualizuj stan lokalny modułu
       setModules((prevModules) =>
         prevModules.map((m) =>
-          m.id === moduleId ? { ...m, isFavourite: newFavouriteState } : m
-        )
+          m.id === moduleId ? { ...m, isFavourite: newFavouriteState } : m,
+        ),
       );
     } catch (error) {
       console.error("Error toggling favourite:", error);
@@ -641,13 +659,13 @@ export default function LibraryPage() {
                         handleToggle(
                           key,
                           v,
-                          key === "state" || key === "sortBy"
+                          key === "state" || key === "sortBy",
                         )
                       }
                       deleteIcon={<ClearIcon style={{ color: "white" }} />}
                       sx={{ bgcolor: "#212b3b", borderRadius: 1 }}
                     />
-                  ))
+                  )),
                 )}
                 <Button
                   onClick={clearFilters}
@@ -693,6 +711,7 @@ export default function LibraryPage() {
                     tier={module.tier}
                     isCompleted={module.userPercentCompleted === 100}
                     id={module.id}
+                    imageSrc={getModuleImage(module.slug)}
                     isFavourite={module.isFavourite}
                     onFavouriteToggle={handleFavouriteToggle}
                   />
