@@ -10,6 +10,8 @@ import {
   createTheme,
   ThemeProvider,
   CssBaseline,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -354,7 +356,7 @@ function Row({
 export default function DashboardPage() {
   const username = localStorage.getItem("username");
   const navigate = useNavigate();
-  const [showPw, setShowPw] = React.useState(false);
+  const [tabValue, setTabValue] = React.useState(0);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   const [paths, setPaths] = useState<PathDetailsDto>();
@@ -401,66 +403,19 @@ export default function DashboardPage() {
             Welcome {username}
           </Typography>
 
-          {/* Tabs */}
-          <Stack
-            direction="row"
-            spacing={4}
-            sx={{ position: "relative", mb: 2 }}
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: C.border,
+              mb: 2,
+              position: "relative",
+            }}
           >
-            <Box sx={{ minWidth: 100 }}>
-              {" "}
-              {/* <-- DODANE minWidth */}
-              <Typography
-                sx={{
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  fontSize: 16,
-                  color: !showPw ? C.text : C.textDim,
-                }}
-                onClick={() => setShowPw(false)}
-              >
-                Enrolled Path
-              </Typography>
-              {!showPw && (
-                <Box
-                  sx={{
-                    height: 3,
-                    width: "100%",
-                    bgcolor: C.lime,
-                    mt: 1,
-                    borderRadius: 3,
-                  }}
-                />
-              )}
-            </Box>
-
-            <Box sx={{ minWidth: 160 }}>
-              {" "}
-              {/* <-- DODANE minWidth */}
-              <Typography
-                sx={{
-                  color: showPw ? C.text : C.textDim,
-                  cursor: "pointer",
-                  fontWeight: 800,
-                  fontSize: 16,
-                }}
-                onClick={() => setShowPw(true)}
-              >
-                Modules In Progress
-              </Typography>
-              {showPw && (
-                <Box
-                  sx={{
-                    height: 3,
-                    width: "100%",
-                    bgcolor: C.lime,
-                    mt: 1,
-                    borderRadius: 3,
-                  }}
-                />
-              )}
-            </Box>
-          </Stack>
+            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+              <Tab label="Enrolled Path" />
+              <Tab label="Modules In Progress" />
+            </Tabs>
+          </Box>
 
           {/* Two columns */}
           <Stack
@@ -469,7 +424,7 @@ export default function DashboardPage() {
             alignItems="flex-start"
           >
             {/* LEFT: Path + Modules */}
-            {!showPw ? (
+            {tabValue === 0 ? (
               <Box
                 sx={{
                   flex: 1,
