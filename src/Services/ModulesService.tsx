@@ -83,6 +83,7 @@ export interface SimpleModuleDetails {
   currentSectionId?: string | null;
   currentSectionOrderIndex?: number | null;
   isStarted: boolean;
+  userStatus?: string | null;
 }
 
 export interface SimpleModuleSection {
@@ -124,6 +125,10 @@ export async function getModuleDetailsById(moduleId: string) {
   return http
     .get<SimpleModuleDetails>(`/modules/${moduleId}/details`)
     .then((r) => r.data);
+}
+
+export async function unlockModule(moduleId: string): Promise<void> {
+  await http.post(`/modules/${moduleId}/unlock`);
 }
 
 // 🔹 GET /api/modules – wszystkie moduły

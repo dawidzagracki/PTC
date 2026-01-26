@@ -10,6 +10,7 @@ import {
   createTheme,
   Container,
   LinearProgress,
+  CircularProgress,
 } from "@mui/material";
 import linux from "./assets/linux.png";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -17,6 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   getModuleDetailsById,
+  unlockModule,
   type SimpleModuleDetails,
 } from "./Services/ModulesService";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
@@ -67,6 +69,8 @@ export default function ModuleOverviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [moduleInfo, setModuleInfo] = useState<SimpleModuleDetails>();
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchModuleDetails();
@@ -78,6 +82,57 @@ export default function ModuleOverviewPage() {
       console.log(module);
     });
   }
+
+  const handleUnlock = async () => {
+    if (!id) return;
+    setErrorMessage(null);
+    try {
+      setIsUnlocking(true);
+      await unlockModule(id);
+      await fetchModuleDetails();
+    } catch (error: any) {
+      const message =
+        error?.response?.data ??
+        "Błąd podczas transakcji. Spróbuj ponownie.";
+      setErrorMessage(message);
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
+  const getModuleAction = () => {
+    if (!moduleInfo?.isStarted) {
+      return {
+        label: `Unlock Module • ${moduleInfo?.price ?? 0} CyberChips`,
+        onClick: handleUnlock,
+        disabled: isUnlocking,
+      };
+    }
+
+    const status = (moduleInfo.userStatus ?? "").toUpperCase();
+    const firstSectionId =
+      moduleInfo.currentSectionId ?? moduleInfo.sections?.[0]?.id;
+
+    if (status === "NOT_STARTED") {
+      return {
+        label: "Start Module",
+        onClick: () => {
+          if (!firstSectionId) return;
+          navigate(`/module/${id}/section/${firstSectionId}`);
+        },
+        disabled: false,
+      };
+    }
+
+    return {
+      label: "Continue Module",
+      onClick: () => {
+        if (!firstSectionId) return;
+        navigate(`/module/${id}/section/${firstSectionId}`);
+      },
+      disabled: false,
+    };
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -204,18 +259,14 @@ export default function ModuleOverviewPage() {
 
               {/* Button + Favorite */}
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                {!moduleInfo?.isStarted ? (
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: "#A6FA12",
-                      color: "#0A0F1E",
-                      fontWeight: 700,
-                    }}
+                {errorMessage && (
+                  <Typography
+                    sx={{ color: "error.main", mr: 2, fontSize: 13 }}
                   >
-                    Start Module
-                  </Button>
-                ) : (
+                    {errorMessage}
+                  </Typography>
+                )}
+                {moduleInfo && (
                   <Button
                     variant="contained"
                     sx={{
@@ -223,13 +274,15 @@ export default function ModuleOverviewPage() {
                       color: "#0A0F1E",
                       fontWeight: 700,
                     }}
-                    onClick={() =>
-                      navigate(
-                        `/module/${id}/section/${moduleInfo.currentSectionId}`
-                      )
+                    disabled={getModuleAction().disabled}
+                    onClick={getModuleAction().onClick}
+                    startIcon={
+                      isUnlocking ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : undefined
                     }
                   >
-                    Continue Module
+                    {isUnlocking ? "Processing..." : getModuleAction().label}
                   </Button>
                 )}
 
