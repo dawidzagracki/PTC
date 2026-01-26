@@ -13,8 +13,9 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Tabs,
+  Tab,
 } from "@mui/material";
-import linux from "./assets/linux.png";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -24,6 +25,7 @@ import {
   type SimpleModuleDetails,
 } from "./Services/ModulesService";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
+import default_module from "./assets/default_module.png";
 
 let theme = createTheme({
   palette: {
@@ -67,6 +69,24 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
+const moduleImages = import.meta.glob(
+  ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const moduleImageMap = Object.fromEntries(
+  Object.entries(moduleImages).map(([path, url]) => {
+    const fileName = path.split("/").pop() ?? "";
+    const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+    return [slug, url];
+  }),
+);
+
+const getModuleImage = (slug?: string | null) =>
+  slug
+    ? (moduleImageMap[slug.toLowerCase()] ?? default_module)
+    : default_module;
+
 export default function ModuleOverviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -75,18 +95,25 @@ export default function ModuleOverviewPage() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [alertSeverity, setAlertSeverity] = useState<"success" | "error">(
-    "success"
+    "success",
   );
+  const [tabValue, setTabValue] = useState(0);
+  const hasProgress = (moduleInfo?.userPercentCompleted ?? 0) > 0;
 
   useEffect(() => {
     fetchModuleDetails();
   }, []);
 
   async function fetchModuleDetails() {
-    await getModuleDetailsById(id ?? "").then((module) => {
+    try {
+      const module = await getModuleDetailsById(id ?? "");
       setModuleInfo(module);
       console.log(module);
-    });
+    } catch {
+      setAlertSeverity("error");
+      setAlertMessage("Nie udało się pobrać szczegółów modułu.");
+      setAlertOpen(true);
+    }
   }
 
   const handleUnlock = async () => {
@@ -100,8 +127,7 @@ export default function ModuleOverviewPage() {
       setAlertOpen(true);
     } catch (error: any) {
       const message =
-        error?.response?.data ??
-        "Błąd podczas transakcji. Spróbuj ponownie.";
+        error?.response?.data ?? "Błąd podczas transakcji. Spróbuj ponownie.";
       setAlertSeverity("error");
       setAlertMessage(message);
       setAlertOpen(true);
@@ -180,7 +206,7 @@ export default function ModuleOverviewPage() {
               </Stack>
 
               {/* Title */}
-              <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
+              <Typography sx={{ fontWeight: 900, mb: 1, fontSize: 48 }}>
                 {moduleInfo?.name}
               </Typography>
               {!moduleInfo?.isStarted && (
@@ -221,49 +247,52 @@ export default function ModuleOverviewPage() {
                     mt: 3,
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mb: 1,
-                      justifyContent: "space-between",
-                      width: "100%",
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: 14 }}>
-                      Module progress
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        mb: 0.5,
-                        fontSize: 14,
-                        color: "lime",
-                      }}
-                    >
-                      {moduleInfo?.userPercentCompleted}% completed
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={moduleInfo?.userPercentCompleted ?? 0}
-                    sx={{
-                      width: "100%",
-                      height: 13,
-                      mr: 1.5,
-                      borderRadius: 999,
-                      overflow: "hidden",
-                      backgroundColor: "#131a2a",
-                      backgroundImage:
-                        "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
-                      backgroundSize: "14px 14px",
-                      "& .MuiLinearProgress-bar": {
-                        borderRadius: 999,
-                        backgroundColor: "rgba(255,255,255,0.18)",
-                        backgroundImage: "none",
-                      },
-                    }}
-                  />
+                  {hasProgress && (
+                    <>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          mb: 1,
+                          justifyContent: "space-between",
+                          width: "100%",
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 700, mb: 0.5, fontSize: 14 }}>
+                          Module progress
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontWeight: 700,
+                            mb: 0.5,
+                            fontSize: 14,
+                            color: "lime",
+                          }}
+                        >
+                          {moduleInfo?.userPercentCompleted}% completed
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={moduleInfo?.userPercentCompleted ?? 0}
+                        sx={{
+                          width: "100%",
+                          height: 13,
+                          borderRadius: 999,
+                          overflow: "hidden",
+                          backgroundColor: "#131a2a",
+                          backgroundImage:
+                            "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+                          backgroundSize: "14px 14px",
+                          "& .MuiLinearProgress-bar": {
+                            borderRadius: 999,
+                            backgroundColor: "rgba(255,255,255,0.18)",
+                            backgroundImage: "none",
+                          },
+                        }}
+                      />
+                    </>
+                  )}
                 </Box>
               )}
 
@@ -298,50 +327,140 @@ export default function ModuleOverviewPage() {
             {/* Placeholder for large right image (removed) */}
             <Box
               sx={{
-                width: 300,
+                width: "40%",
                 height: 260,
+
                 borderRadius: 2,
                 bgcolor: "#0F1529",
-                mr: "30%",
+                ml: "auto",
+                overflow: "hidden",
               }}
             >
-              <img src={linux} />
+              <Box
+                component="img"
+                src={getModuleImage(moduleInfo?.slug)}
+                alt={moduleInfo?.name ?? "Module"}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  fontSize: 48,
+                }}
+              />
             </Box>
           </Box>
 
           {/* TAB SWITCHER */}
-          <Stack direction="row" spacing={4} sx={{ mt: 6, mb: 2 }}>
-            <Typography sx={{ fontWeight: 700, color: "#A6FA12" }}>
-              Progress
-            </Typography>
-            <Typography sx={{ opacity: 0.7 }}>Module Details</Typography>
-          </Stack>
-
-          <Divider sx={{ borderColor: "rgba(255,255,255,0.15)", mb: 4 }} />
-
-          {/* SECTIONS HEADER */}
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ mb: 2 }}
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: "rgba(255,255,255,0.15)",
+              mt: 6,
+              mb: 4,
+              position: "relative",
+            }}
           >
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 900 }}>
-                Sections
-              </Typography>
-              <Typography sx={{ opacity: 0.7 }}>
-                {moduleInfo?.sectionsCount} sections ·{" "}
-                {moduleInfo?.interactiveSectionsCount} Interactive
-              </Typography>
-            </Box>
-          </Stack>
+            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+              <Tab label="Progress" />
+              <Tab label="Module Details" />
+            </Tabs>
+          </Box>
 
-          {/* SECTION LIST */}
-          <Stack spacing={2}>
-            {moduleInfo?.sections.map((section) => (
+          {tabValue === 0 && (
+            <>
+              {/* SECTIONS HEADER */}
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
+              >
+                <Box>
+                  <Typography variant="h5" sx={{ fontWeight: 900 }}>
+                    Sections
+                  </Typography>
+                  <Typography sx={{ opacity: 0.7 }}>
+                    {moduleInfo?.sectionsCount} sections ·{" "}
+                    {moduleInfo?.interactiveSectionsCount} Interactive
+                  </Typography>
+                </Box>
+              </Stack>
+
+              {/* SECTION LIST */}
+              <Stack spacing={2}>
+                {moduleInfo?.sections.map((section) => (
+                  <Box
+                    key={section.id}
+                    sx={{
+                      bgcolor: "background.paper",
+                      borderRadius: 2,
+                      p: 3,
+                      border: "1px solid rgba(255,255,255,0.05)",
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            bgcolor: "#4a4c4eb6",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 700,
+                            color: "#ffffffff",
+                          }}
+                        >
+                          {section.orderIndex}
+                        </Box>
+
+                        <Typography sx={{ fontWeight: 700 }}>
+                          {section.name}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
               <Box
-                key={section.id}
+                sx={{
+                  mt: 2.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Typography>Earn</Typography>
+                  <Typography sx={{ color: "#9AF80B" }}>
+                    {moduleInfo?.reward} Cubes
+                  </Typography>
+                  <Typography>back, when you complete this module</Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#A6FA12", color: "#0A0F1E", fontWeight: 700 }}
+                  disabled={getModuleAction().disabled}
+                  onClick={getModuleAction().onClick}
+                >
+                  Start Module
+                </Button>
+              </Box>
+              <Divider sx={{ borderColor: "rgba(255,255,255,0.15)", mt: 2 }} />
+            </>
+          )}
+
+          {tabValue === 1 && (
+            <Stack spacing={3}>
+              <Box
                 sx={{
                   bgcolor: "background.paper",
                   borderRadius: 2,
@@ -349,59 +468,29 @@ export default function ModuleOverviewPage() {
                   border: "1px solid rgba(255,255,255,0.05)",
                 }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: "50%",
-                        bgcolor: "#4a4c4eb6",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 700,
-                        color: "#ffffffff",
-                      }}
-                    >
-                      {section.orderIndex}
-                    </Box>
-
-                    <Typography sx={{ fontWeight: 700 }}>
-                      {section.name}
-                    </Typography>
-                  </Box>
-                </Stack>
+                <Typography sx={{ fontWeight: 800, mb: 1 }}>Summary</Typography>
+                <Typography sx={{ opacity: 0.85, lineHeight: 1.7 }}>
+                  {moduleInfo?.summary ?? "No summary available yet."}
+                </Typography>
               </Box>
-            ))}
-          </Stack>
-          <Box
-            sx={{
-              mt: 2.5,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <Typography>Earn</Typography>
-              <Typography sx={{ color: "#9AF80B" }}>
-                {moduleInfo?.reward} Cubes
-              </Typography>
-              <Typography>back, when you complete this module</Typography>
-            </Box>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#A6FA12", color: "#0A0F1E", fontWeight: 700 }}
-            >
-              Start Module
-            </Button>
-          </Box>
-          <Divider sx={{ borderColor: "rgba(255,255,255,0.15)", mt: 2 }} />
+
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                  borderRadius: 2,
+                  p: 3,
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                <Typography sx={{ fontWeight: 800, mb: 1 }}>
+                  Description
+                </Typography>
+                <Typography sx={{ opacity: 0.85, lineHeight: 1.7 }}>
+                  {moduleInfo?.description ?? "No description available yet."}
+                </Typography>
+              </Box>
+            </Stack>
+          )}
         </Container>
       </Box>
       <Snackbar
