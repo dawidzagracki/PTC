@@ -75,6 +75,7 @@ export default function RegisterStep1Page() {
         localStorage.setItem("email", result.email);
         localStorage.setItem("fullName", result.fullName);
         localStorage.setItem("username", result.userName);
+        localStorage.setItem("isOnBoarded", String(result.isOnBoarded));
         navigate(result.isOnBoarded ? "/dashboard" : "/welcome");
       }
     },

@@ -145,6 +145,7 @@ export default function RegisterStep3Page() {
         localStorage.setItem("email", data.email);
         localStorage.setItem("fullName", data.fullName);
         localStorage.setItem("username", data.userName);
+        localStorage.setItem("isOnBoarded", String(data.isOnBoarded));
         navigate("/dashboard");
       } else {
         navigate("/email-verify", { state: { email: email } });

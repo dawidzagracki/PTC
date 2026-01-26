@@ -81,6 +81,7 @@ export default function LoginPage() {
         localStorage.setItem("email", result.email);
         localStorage.setItem("fullName", result.fullName);
         localStorage.setItem("username", result.userName);
+        localStorage.setItem("isOnBoarded", String(result.isOnBoarded));
         navigate(result.isOnBoarded ? "/dashboard" : "/welcome");
       }
     },
@@ -100,6 +101,7 @@ export default function LoginPage() {
       localStorage.setItem("email", data.email);
       localStorage.setItem("fullName", data.fullName);
       localStorage.setItem("username", data.userName);
+      localStorage.setItem("isOnBoarded", String(data.isOnBoarded));
       navigate("/dashboard", { state: { data: data } });
     }
   };

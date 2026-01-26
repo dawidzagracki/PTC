@@ -323,9 +323,15 @@ export default function DashboardPage() {
   const [module, setModule] = useState<ModuleWithUserProgressDto>();
 
   useEffect(() => {
+    const isOnBoarded = localStorage.getItem("isOnBoarded") === "true";
+    if (!isOnBoarded) {
+      navigate("/on-boarding");
+      return;
+    }
+
     fetchPaths();
     fetchModules();
-  }, []);
+  }, [navigate]);
 
   async function fetchPaths() {
     await getUserEnrolledPaths().then((paths) => {

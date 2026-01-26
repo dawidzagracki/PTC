@@ -13,7 +13,7 @@ import {
   createTheme,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { completeOnboarding } from "../../Services/OnboardingService";
+import { completeOnboarding, skipOnboarding } from "../../Services/OnboardingService";
 import type { OnboardingRequest } from "../../Models/OnboardingRequest";
 
 const theme = createTheme({
@@ -195,6 +195,7 @@ export default function OnBoardingPage() {
     try {
       setIsSubmitting(true);
       await completeOnboarding(payload);
+      localStorage.setItem("isOnBoarded", "true");
       navigate("/dashboard");
     } catch {
       setError("Nie udało się zapisać onboardingu. Spróbuj ponownie.");
@@ -203,8 +204,19 @@ export default function OnBoardingPage() {
     }
   };
 
-  const handleSkip = () => {
-    navigate("/dashboard");
+  const handleSkip = async () => {
+    setError(null);
+
+    try {
+      setIsSubmitting(true);
+      await skipOnboarding();
+      localStorage.setItem("isOnBoarded", "true");
+      navigate("/dashboard");
+    } catch {
+      setError("Nie udało się pominąć onboardingu. Spróbuj ponownie.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
