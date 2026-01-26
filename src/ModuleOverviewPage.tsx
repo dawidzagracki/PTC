@@ -11,6 +11,8 @@ import {
   Container,
   LinearProgress,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import linux from "./assets/linux.png";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -70,7 +72,11 @@ export default function ModuleOverviewPage() {
   const navigate = useNavigate();
   const [moduleInfo, setModuleInfo] = useState<SimpleModuleDetails>();
   const [isUnlocking, setIsUnlocking] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertSeverity, setAlertSeverity] = useState<"success" | "error">(
+    "success"
+  );
 
   useEffect(() => {
     fetchModuleDetails();
@@ -85,16 +91,20 @@ export default function ModuleOverviewPage() {
 
   const handleUnlock = async () => {
     if (!id) return;
-    setErrorMessage(null);
     try {
       setIsUnlocking(true);
       await unlockModule(id);
       await fetchModuleDetails();
+      setAlertSeverity("success");
+      setAlertMessage("Moduł odblokowany pomyślnie.");
+      setAlertOpen(true);
     } catch (error: any) {
       const message =
         error?.response?.data ??
         "Błąd podczas transakcji. Spróbuj ponownie.";
-      setErrorMessage(message);
+      setAlertSeverity("error");
+      setAlertMessage(message);
+      setAlertOpen(true);
     } finally {
       setIsUnlocking(false);
     }
@@ -259,13 +269,6 @@ export default function ModuleOverviewPage() {
 
               {/* Button + Favorite */}
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                {errorMessage && (
-                  <Typography
-                    sx={{ color: "error.main", mr: 2, fontSize: 13 }}
-                  >
-                    {errorMessage}
-                  </Typography>
-                )}
                 {moduleInfo && (
                   <Button
                     variant="contained"
@@ -401,6 +404,35 @@ export default function ModuleOverviewPage() {
           <Divider sx={{ borderColor: "rgba(255,255,255,0.15)", mt: 2 }} />
         </Container>
       </Box>
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={3500}
+        onClose={() => setAlertOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setAlertOpen(false)}
+          severity={alertSeverity}
+          variant="outlined"
+          sx={{
+            width: "100%",
+            bgcolor: "background.paper",
+            color: "text.primary",
+            borderColor:
+              alertSeverity === "success"
+                ? "rgba(166,250,18,0.6)"
+                : "rgba(244,67,54,0.6)",
+            "& .MuiAlert-icon": {
+              color:
+                alertSeverity === "success"
+                  ? "rgba(166,250,18,0.9)"
+                  : "rgba(244,67,54,0.9)",
+            },
+          }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 }
