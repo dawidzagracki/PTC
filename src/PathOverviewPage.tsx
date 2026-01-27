@@ -309,6 +309,7 @@ export default function PathOverviewPage() {
                   borderColor: C.border,
                   mb: 2,
                   position: "relative",
+                  display: "inline-flex",
                 }}
               >
                 <Tabs
