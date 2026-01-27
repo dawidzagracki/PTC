@@ -60,12 +60,12 @@ const C = {
 
 const moduleImages = import.meta.glob(
   ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
-  { eager: true, import: "default" }
+  { eager: true, import: "default" },
 ) as Record<string, string>;
 
 const pathImages = import.meta.glob(
   ["./assets/paths/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
-  { eager: true, import: "default" }
+  { eager: true, import: "default" },
 ) as Record<string, string>;
 
 const toSlugMap = (images: Record<string, string>) =>
@@ -74,16 +74,18 @@ const toSlugMap = (images: Record<string, string>) =>
       const fileName = path.split("/").pop() ?? "";
       const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
       return [slug, url];
-    })
+    }),
   );
 
 const moduleImageMap = toSlugMap(moduleImages);
 const pathImageMap = toSlugMap(pathImages);
 
 const getModuleImage = (slug?: string | null) =>
-  slug ? moduleImageMap[slug.toLowerCase()] ?? default_module : default_module;
+  slug
+    ? (moduleImageMap[slug.toLowerCase()] ?? default_module)
+    : default_module;
 const getPathImage = (slug?: string | null) =>
-  slug ? pathImageMap[slug.toLowerCase()] ?? default_module : default_module;
+  slug ? (pathImageMap[slug.toLowerCase()] ?? default_module) : default_module;
 
 let theme = createTheme({
   palette: {
@@ -365,9 +367,9 @@ export default function DashboardPage() {
 
   const [paths, setPaths] = useState<PathDetailsDto>();
   const [module, setModule] = useState<ModuleWithUserProgressDto>();
-  const [categoryProgress, setCategoryProgress] = useState<CategoryProgressDto[]>(
-    []
-  );
+  const [categoryProgress, setCategoryProgress] = useState<
+    CategoryProgressDto[]
+  >([]);
   const hasEnrolledPath = Boolean(paths?.id);
 
   useEffect(() => {
@@ -533,7 +535,11 @@ export default function DashboardPage() {
                           component="img"
                           src={getPathImage(paths?.slug)}
                           alt={paths?.name ?? "Path"}
-                          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
                         />
                       </Box>
                       <Box>
@@ -630,7 +636,7 @@ export default function DashboardPage() {
                           moduleId={module?.id ?? ""}
                           moduleSlug={x.moduleSlug}
                         />
-                      )
+                      ),
                     )}
                   </Box>
                 </Box>
@@ -658,7 +664,7 @@ export default function DashboardPage() {
                     sx={{ bgcolor: C.lime, color: "#0A0F1E", fontWeight: 700 }}
                     onClick={() =>
                       navigate(
-                        `/module/${paths?.nextModuleId}/section/${paths?.nextModuleLastSectionId}`
+                        `/module/${paths?.nextModuleId}/section/${paths?.nextModuleLastSectionId}`,
                       )
                     }
                   >
@@ -714,7 +720,11 @@ export default function DashboardPage() {
                           component="img"
                           src={getModuleImage(module?.slug)}
                           alt={module?.name ?? "Module"}
-                          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
                         />
                       </Box>
                       <Box>
@@ -850,7 +860,7 @@ export default function DashboardPage() {
                             sectionId={x.id}
                             key={i}
                           />
-                        )
+                        ),
                       )}
                     </Box>
                   )}
@@ -879,7 +889,7 @@ export default function DashboardPage() {
                     sx={{ bgcolor: C.lime, color: "#0A0F1E", fontWeight: 700 }}
                     onClick={() =>
                       navigate(
-                        `/module/${module?.id}/section/${module?.lastSectionId}`
+                        `/module/${module?.id}/section/${module?.lastSectionId}`,
                       )
                     }
                   >
@@ -1013,71 +1023,75 @@ export default function DashboardPage() {
                   const value = Math.round(x.percentCompleted * 10) / 10;
                   const title = x.category.toUpperCase();
                   return (
-                  <Box
-                    key={x.category}
-                    sx={{
-                      bgcolor: "#1a2332",
-                      border: `1px solid ${C.border}`,
-                      borderRadius: 2,
-                      p: 2,
-                      minHeight: 140,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      sx={{ mb: 2 }}
-                    >
-                      {getCategoryIcon(x.category)}
-                      <Typography
-                        sx={{
-                          fontWeight: 900,
-                          letterSpacing: 0.4,
-                          fontSize: 12,
-                          color: C.textDim,
-                        }}
-                      >
-                        {title}
-                      </Typography>
-                    </Stack>
-
-                    <Typography
-                      sx={{ fontWeight: 900, fontSize: 28, lineHeight: 1 }}
-                    >
-                      {value}%
-                    </Typography>
-
-                    <LinearProgress
-                      variant="determinate"
-                      value={value}
+                    <Box
+                      key={x.category}
                       sx={{
-                        mt: 1.5,
-                        height: 6,
-                        borderRadius: 999,
-                        overflow: "hidden",
-
-                        /* TRACK – paski */
-                        backgroundColor: "#131a2a",
-                        backgroundImage:
-                          "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
-                        backgroundSize: "14px 14px",
-
-                        /* BAR */
-                        "& .MuiLinearProgress-bar": {
-                          borderRadius: 999,
-                          backgroundColor:
-                            title === "GENERAL"
-                              ? C.lime
-                              : "rgba(255,255,255,0.18)",
-                          backgroundImage: "none",
-                        },
+                        bgcolor: "#1a2332",
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 2,
+                        p: 2,
+                        minHeight: 140,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        fontFamily:
+                          '"JetBrains Mono", "Roboto Mono", "Roboto", "Inter", monospace',
+                        fontWeight: 100,
+                        fontFeatureSettings: '"zero"',
                       }}
-                    />
-                  </Box>
+                    >
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ mb: 2 }}
+                      >
+                        {getCategoryIcon(x.category)}
+                        <Typography
+                          sx={{
+                            fontWeight: 400,
+                            letterSpacing: 0.4,
+                            fontSize: 12,
+                            color: C.textDim,
+                          }}
+                        >
+                          {title}
+                        </Typography>
+                      </Stack>
+
+                      <Typography
+                        sx={{ fontWeight: 400, fontSize: 28, lineHeight: 1 }}
+                      >
+                        {value}%
+                      </Typography>
+
+                      <LinearProgress
+                        variant="determinate"
+                        value={value}
+                        sx={{
+                          mt: 1.5,
+                          height: 6,
+                          borderRadius: 999,
+                          overflow: "hidden",
+
+                          /* TRACK – paski */
+                          backgroundColor: "#131a2a",
+                          backgroundImage:
+                            "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+                          backgroundSize: "14px 14px",
+
+                          /* BAR */
+                          "& .MuiLinearProgress-bar": {
+                            borderRadius: 999,
+                            backgroundColor:
+                              title === "GENERAL"
+                                ? C.lime
+                                : "rgba(255,255,255,0.18)",
+                            backgroundImage: "none",
+                          },
+                        }}
+                      />
+                    </Box>
                   );
                 })}
               </Box>
