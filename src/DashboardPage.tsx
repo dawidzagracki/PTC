@@ -361,6 +361,7 @@ export default function DashboardPage() {
 
   const [paths, setPaths] = useState<PathDetailsDto>();
   const [module, setModule] = useState<ModuleWithUserProgressDto>();
+  const hasEnrolledPath = Boolean(paths?.id);
 
   useEffect(() => {
     const isOnBoarded = localStorage.getItem("isOnBoarded") === "true";
@@ -374,16 +375,22 @@ export default function DashboardPage() {
   }, [navigate]);
 
   async function fetchPaths() {
-    await getUserEnrolledPaths().then((paths) => {
-      setPaths(paths);
-      console.log(paths);
-    });
+    try {
+      const result = await getUserEnrolledPaths();
+      setPaths(result);
+      console.log(result);
+    } catch (error) {
+      console.error("Nie udało się pobrać ścieżek użytkownika.", error);
+    }
   }
 
   async function fetchModules() {
-    await getAllModulesWithUserProgress().then((module) => {
-      setModule(module);
-    });
+    try {
+      const result = await getAllModulesWithUserProgress();
+      setModule(result);
+    } catch (error) {
+      console.error("Nie udało się pobrać modułów użytkownika.", error);
+    }
   }
 
   return (
@@ -411,8 +418,11 @@ export default function DashboardPage() {
               position: "relative",
             }}
           >
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
-              <Tab label="Enrolled Path" />
+            <Tabs
+              value={hasEnrolledPath ? tabValue : 0}
+              onChange={(_, v) => setTabValue(hasEnrolledPath ? v : 0)}
+            >
+              {hasEnrolledPath && <Tab label="Enrolled Path" />}
               <Tab label="Modules In Progress" />
             </Tabs>
           </Box>
@@ -424,7 +434,7 @@ export default function DashboardPage() {
             alignItems="flex-start"
           >
             {/* LEFT: Path + Modules */}
-            {tabValue === 0 ? (
+            {hasEnrolledPath && tabValue === 0 ? (
               <Box
                 sx={{
                   flex: 1,
