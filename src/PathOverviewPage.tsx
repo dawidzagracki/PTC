@@ -303,25 +303,6 @@ export default function PathOverviewPage() {
                 )}
               </Stack>
 
-              <Box
-                sx={{
-                  borderBottom: 1,
-                  borderColor: C.border,
-                  mb: 2,
-                  position: "relative",
-                  display: "inline-flex",
-                }}
-              >
-                <Tabs
-                  value={tabValue}
-                  onChange={(_, v) => setTabValue(v as "progress" | "details")}
-                >
-                  {pathInfo?.hasStarted && (
-                    <Tab label="Progress" value="progress" />
-                  )}
-                  <Tab label="Path Details" value="details" />
-                </Tabs>
-              </Box>
             </Box>
 
             {/* PRAWA STRONA – grafika (placeholder) */}
@@ -346,6 +327,26 @@ export default function PathOverviewPage() {
               />
             </Box>
           </Stack>
+
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: C.border,
+              mt: 4,
+              position: "relative",
+              width: "100%",
+            }}
+          >
+            <Tabs
+              value={tabValue}
+              onChange={(_, v) => setTabValue(v as "progress" | "details")}
+            >
+              {pathInfo?.hasStarted && (
+                <Tab label="Progress" value="progress" />
+              )}
+              <Tab label="Path Details" value="details" />
+            </Tabs>
+          </Box>
 
           {/* DOLNA CZĘŚĆ – WIDOK ZALEŻNY OD TABU */}
           <Box sx={{ mt: 6 }}>
