@@ -97,6 +97,7 @@ export interface SimplePathWithModulesDetailsDto {
 
 export interface SimplePathModuleItemDto {
   moduleId: string;
+  moduleSlug: string;
   name: string;
   description: string;
   difficulty: string;

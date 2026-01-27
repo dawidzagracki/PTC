@@ -23,6 +23,7 @@ import {
   unenrollFromPath,
   type SimplePathWithModulesDetailsDto,
 } from "./Services/PathsService";
+import default_module from "./assets/default_module.png";
 
 const C = {
   bg: "#0A0F1E",
@@ -68,6 +69,33 @@ let theme = createTheme({
 });
 
 theme = responsiveFontSizes(theme);
+
+const moduleImages = import.meta.glob(
+  ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const pathImages = import.meta.glob(
+  ["./assets/paths/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const toSlugMap = (images: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(images).map(([path, url]) => {
+      const fileName = path.split("/").pop() ?? "";
+      const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+      return [slug, url];
+    }),
+  );
+
+const moduleImageMap = toSlugMap(moduleImages);
+const pathImageMap = toSlugMap(pathImages);
+
+const getModuleImage = (slug?: string | null) =>
+  slug ? moduleImageMap[slug.toLowerCase()] ?? default_module : default_module;
+const getPathImage = (slug?: string | null) =>
+  slug ? pathImageMap[slug.toLowerCase()] ?? default_module : default_module;
 
 export default function PathOverviewPage() {
   const [tabValue, setTabValue] = useState<"progress" | "details">("progress");
@@ -316,13 +344,16 @@ export default function PathOverviewPage() {
               }}
             >
               <Box
+                component="img"
+                src={getPathImage(pathInfo?.slug)}
+                alt={pathInfo?.name ?? "Path"}
                 sx={{
                   width: "100%",
                   maxWidth: 520,
                   height: 260,
                   borderRadius: 2,
-                  bgcolor: "#050813",
                   border: `1px solid ${C.border}`,
+                  objectFit: "cover",
                 }}
               />
             </Box>
@@ -378,10 +409,13 @@ export default function PathOverviewPage() {
                   >
                     {/* lewa pseudo-grafika */}
                     <Box
+                      component="img"
+                      src={getModuleImage(module.moduleSlug)}
+                      alt={module.name}
                       sx={{
                         width: 160,
-                        bgcolor: "#050813",
                         borderRight: `1px solid ${C.border}`,
+                        objectFit: "cover",
                       }}
                     />
                     {/* prawa część */}
@@ -484,10 +518,13 @@ export default function PathOverviewPage() {
                   >
                     {/* lewa pseudo-grafika */}
                     <Box
+                      component="img"
+                      src={getModuleImage(module.moduleSlug)}
+                      alt={module.name}
                       sx={{
                         width: 160,
-                        bgcolor: "#050813",
                         borderRight: `1px solid ${C.border}`,
+                        objectFit: "cover",
                       }}
                     />
                     {/* prawa część */}
