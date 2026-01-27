@@ -11,6 +11,8 @@ import {
   Typography,
   createTheme,
   responsiveFontSizes,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
@@ -67,10 +69,8 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
-type ActiveTab = "progress" | "details";
-
 export default function PathOverviewPage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("progress");
+  const [tabValue, setTabValue] = useState<"progress" | "details">("progress");
   const { id } = useParams();
   const navigate = useNavigate();
   const [pathInfo, setPathInfo] = useState<SimplePathWithModulesDetailsDto>();
@@ -80,23 +80,32 @@ export default function PathOverviewPage() {
   }, []);
 
   async function fetchModuleDetails() {
-    await getUserPathById(id ?? "").then((path) => {
+    try {
+      const path = await getUserPathById(id ?? "");
       setPathInfo(path);
-      setActiveTab(path.hasStarted ? "progress" : "details");
+      setTabValue(path.hasStarted ? "progress" : "details");
       console.log(path);
-    });
+    } catch (error) {
+      console.error("Nie udało się pobrać szczegółów ścieżki.", error);
+    }
   }
 
   async function handleEnrollPath() {
-    await enrollFromPath(id ?? "").then(() => {
-      fetchModuleDetails();
-    });
+    try {
+      await enrollFromPath(id ?? "");
+      await fetchModuleDetails();
+    } catch (error) {
+      console.error("Nie udało się zapisać do ścieżki.", error);
+    }
   }
 
   async function handleUnenrollPath() {
-    await unenrollFromPath(id ?? "").then(() => {
-      fetchModuleDetails();
-    });
+    try {
+      await unenrollFromPath(id ?? "");
+      await fetchModuleDetails();
+    } catch (error) {
+      console.error("Nie udało się wypisać ze ścieżki.", error);
+    }
   }
 
   return (
@@ -294,47 +303,24 @@ export default function PathOverviewPage() {
                 )}
               </Stack>
 
-              <Stack direction="row" spacing={1}>
-                {pathInfo?.hasStarted && (
-                  <Button
-                    variant={activeTab === "progress" ? "contained" : "text"}
-                    onClick={() => setActiveTab("progress")}
-                    sx={{
-                      px: 4,
-                      borderRadius: 1.5,
-                      fontWeight: 700,
-                      bgcolor:
-                        activeTab === "progress" ? "#1a2332" : "transparent",
-                      color: activeTab === "progress" ? C.text : C.textDim,
-                      borderBottom:
-                        activeTab === "progress"
-                          ? `2px solid ${C.lime}`
-                          : "2px solid transparent",
-                    }}
-                  >
-                    Progress
-                  </Button>
-                )}
-
-                <Button
-                  variant={activeTab === "details" ? "contained" : "text"}
-                  onClick={() => setActiveTab("details")}
-                  sx={{
-                    px: 4,
-                    borderRadius: 1.5,
-                    fontWeight: 700,
-                    bgcolor:
-                      activeTab === "details" ? "#1a2332" : "transparent",
-                    color: activeTab === "details" ? C.text : C.textDim,
-                    borderBottom:
-                      activeTab === "details"
-                        ? `2px solid ${C.lime}`
-                        : "2px solid transparent",
-                  }}
+              <Box
+                sx={{
+                  borderBottom: 1,
+                  borderColor: C.border,
+                  mb: 2,
+                  position: "relative",
+                }}
+              >
+                <Tabs
+                  value={tabValue}
+                  onChange={(_, v) => setTabValue(v as "progress" | "details")}
                 >
-                  Path Details
-                </Button>
-              </Stack>
+                  {pathInfo?.hasStarted && (
+                    <Tab label="Progress" value="progress" />
+                  )}
+                  <Tab label="Path Details" value="details" />
+                </Tabs>
+              </Box>
             </Box>
 
             {/* PRAWA STRONA – grafika (placeholder) */}
@@ -362,7 +348,7 @@ export default function PathOverviewPage() {
 
           {/* DOLNA CZĘŚĆ – WIDOK ZALEŻNY OD TABU */}
           <Box sx={{ mt: 6 }}>
-            {activeTab === "progress" ? (
+            {tabValue === "progress" && pathInfo?.hasStarted ? (
               <>
                 {pathInfo?.startedModules != null &&
                   pathInfo?.startedModules.length > 0 && (
