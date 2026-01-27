@@ -1020,6 +1020,10 @@ export default function DashboardPage() {
                       border: `1px solid ${C.border}`,
                       borderRadius: 2,
                       p: 2,
+                      minHeight: 140,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
                     }}
                   >
                     <Stack
