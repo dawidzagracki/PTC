@@ -39,6 +39,10 @@ import {
   type ModuleWithUserProgressDto,
   type SectionWithUserProgressDto,
 } from "./Services/ModulesService";
+import {
+  getCategoryProgress,
+  type CategoryProgressDto,
+} from "./Services/DashboardService";
 import { useNavigate } from "react-router-dom";
 import default_module from "./assets/default_module.png";
 // import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
@@ -361,6 +365,9 @@ export default function DashboardPage() {
 
   const [paths, setPaths] = useState<PathDetailsDto>();
   const [module, setModule] = useState<ModuleWithUserProgressDto>();
+  const [categoryProgress, setCategoryProgress] = useState<CategoryProgressDto[]>(
+    []
+  );
   const hasEnrolledPath = Boolean(paths?.id);
 
   useEffect(() => {
@@ -372,6 +379,7 @@ export default function DashboardPage() {
 
     fetchPaths();
     fetchModules();
+    fetchCategoryProgress();
   }, [navigate]);
 
   async function fetchPaths() {
@@ -392,6 +400,49 @@ export default function DashboardPage() {
       console.error("Nie udało się pobrać modułów użytkownika.", error);
     }
   }
+
+  async function fetchCategoryProgress() {
+    try {
+      const result = await getCategoryProgress();
+      setCategoryProgress(result);
+    } catch (error) {
+      console.error("Nie udało się pobrać postępu kategorii.", error);
+    }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    const key = category.trim().toLowerCase();
+    switch (key) {
+      case "offensive":
+        return (
+          <SportsMmaIcon sx={{ width: 18, height: 18, color: "#FF4D4D" }} />
+        );
+      case "defensive":
+        return (
+          <GppGoodOutlinedIcon
+            sx={{ width: 18, height: 18, color: "#4DA3FF" }}
+          />
+        );
+      case "general":
+        return (
+          <ArticleOutlinedIcon
+            sx={{ width: 18, height: 18, color: "#C9D3E3" }}
+          />
+        );
+      case "purple":
+        return (
+          <ShieldOutlinedIcon
+            sx={{ width: 18, height: 18, color: "#A855F7" }}
+          />
+        );
+      default:
+        return (
+          <ArticleOutlinedIcon
+            sx={{ width: 18, height: 18, color: "#C9D3E3" }}
+          />
+        );
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -958,46 +1009,12 @@ export default function DashboardPage() {
                   gap: 2,
                 }}
               >
-                {[
-                  {
-                    title: "OFFENSIVE",
-                    value: 1.5,
-                    icon: (
-                      <SportsMmaIcon
-                        sx={{ width: 18, height: 18, color: "#FF4D4D" }}
-                      />
-                    ),
-                  },
-                  {
-                    title: "DEFENSIVE",
-                    value: 0,
-                    icon: (
-                      <GppGoodOutlinedIcon
-                        sx={{ width: 18, height: 18, color: "#4DA3FF" }}
-                      />
-                    ),
-                  },
-                  {
-                    title: "GENERAL",
-                    value: 11.8,
-                    icon: (
-                      <ArticleOutlinedIcon
-                        sx={{ width: 18, height: 18, color: "#C9D3E3" }}
-                      />
-                    ),
-                  },
-                  {
-                    title: "PURPLE",
-                    value: 0,
-                    icon: (
-                      <ShieldOutlinedIcon
-                        sx={{ width: 18, height: 18, color: "#A855F7" }}
-                      />
-                    ),
-                  },
-                ].map((x) => (
+                {categoryProgress.map((x) => {
+                  const value = Math.round(x.percentCompleted * 10) / 10;
+                  const title = x.category.toUpperCase();
+                  return (
                   <Box
-                    key={x.title}
+                    key={x.category}
                     sx={{
                       bgcolor: "#1a2332",
                       border: `1px solid ${C.border}`,
@@ -1011,7 +1028,7 @@ export default function DashboardPage() {
                       alignItems="center"
                       sx={{ mb: 2 }}
                     >
-                      {x.icon}
+                      {getCategoryIcon(x.category)}
                       <Typography
                         sx={{
                           fontWeight: 900,
@@ -1020,19 +1037,19 @@ export default function DashboardPage() {
                           color: C.textDim,
                         }}
                       >
-                        {x.title}
+                        {title}
                       </Typography>
                     </Stack>
 
                     <Typography
                       sx={{ fontWeight: 900, fontSize: 28, lineHeight: 1 }}
                     >
-                      {x.value}%
+                      {value}%
                     </Typography>
 
                     <LinearProgress
                       variant="determinate"
-                      value={x.value}
+                      value={value}
                       sx={{
                         mt: 1.5,
                         height: 6,
@@ -1049,7 +1066,7 @@ export default function DashboardPage() {
                         "& .MuiLinearProgress-bar": {
                           borderRadius: 999,
                           backgroundColor:
-                            x.title === "GENERAL"
+                            title === "GENERAL"
                               ? C.lime
                               : "rgba(255,255,255,0.18)",
                           backgroundImage: "none",
@@ -1057,7 +1074,8 @@ export default function DashboardPage() {
                       }}
                     />
                   </Box>
-                ))}
+                  );
+                })}
               </Box>
             </Box>
           </Stack>
