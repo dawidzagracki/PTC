@@ -83,7 +83,7 @@ theme = responsiveFontSizes(theme);
 
 const pathImages = import.meta.glob(
   ["./assets/paths/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
-  { eager: true, import: "default" }
+  { eager: true, import: "default" },
 ) as Record<string, string>;
 
 const pathImageMap = Object.fromEntries(
@@ -91,7 +91,7 @@ const pathImageMap = Object.fromEntries(
     const fileName = path.split("/").pop() ?? "";
     const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
     return [slug, url];
-  })
+  }),
 );
 
 const getPathImage = (slug: string) =>
@@ -225,6 +225,7 @@ function EnrolledCardLarge(props: { card: PathCard }) {
         boxShadow: "0 18px 45px rgba(0,0,0,0.25)",
         overflow: "hidden",
         maxWidth: "100%",
+        height: "100%",
 
         // --- KLUCZOWE ZMIANY DLA EFEKTU HOVER ---
         cursor: "pointer",
@@ -244,7 +245,8 @@ function EnrolledCardLarge(props: { card: PathCard }) {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "230px 1fr" },
           alignItems: "stretch",
-          minHeight: 190,
+          minHeight: 220,
+          height: "100%",
         }}
       >
         <Box
@@ -270,7 +272,17 @@ function EnrolledCardLarge(props: { card: PathCard }) {
           />
         </Box>
 
-        <Box sx={{ pt: 2.5, pr: 1, position: "relative" }}>
+        <Box
+          sx={{
+            pt: 2.5,
+            pr: 1,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            pb: 2.5,
+          }}
+        >
           <EnrolledBadgeRow
             pathType={card.rolePath ? "JOB" : "SKILL"}
             isEnrolled={card.enrolled ?? false}
@@ -293,16 +305,22 @@ function EnrolledCardLarge(props: { card: PathCard }) {
               lineHeight: 1.7,
               fontSize: 13.5,
               maxWidth: 520,
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
             {card.desc.slice(0, 100)}...
           </Typography>
 
-          <InfoRow
-            difficulty={card.difficulty}
-            time={card.time}
-            modules={card.modules}
-          />
+          <Box sx={{ mt: "auto", pt: 2 }}>
+            <InfoRow
+              difficulty={card.difficulty}
+              time={card.time}
+              modules={card.modules}
+            />
+          </Box>
 
           <IconButton
             sx={{
@@ -436,7 +454,8 @@ export default function PathsLibraryPage() {
                   display: "grid",
                   gridTemplateColumns: { lg: "1fr 1fr" },
                   gap: 2,
-                  alignItems: "start",
+                  alignItems: "stretch",
+                  gridAutoRows: "1fr",
                 }}
               >
                 {paths?.started.map((path) => (
@@ -461,7 +480,7 @@ export default function PathsLibraryPage() {
           {paths?.notStarted.length !== 0 && (
             <>
               {/* ENROLLED PATH */}
-              <Typography sx={{ fontWeight: 900, fontSize: 18, mb: 2 }}>
+              <Typography sx={{ fontWeight: 900, fontSize: 18, mb: 2, mt: 3 }}>
                 Job Role Paths
               </Typography>
               <Box
@@ -469,7 +488,8 @@ export default function PathsLibraryPage() {
                   display: "grid",
                   gridTemplateColumns: { lg: "1fr 1fr" },
                   gap: 2,
-                  alignItems: "start",
+                  alignItems: "stretch",
+                  gridAutoRows: "1fr",
                 }}
               >
                 {paths?.notStarted.map((path) => (

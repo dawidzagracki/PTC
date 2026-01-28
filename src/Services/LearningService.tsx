@@ -3,6 +3,8 @@ import { http } from "../api/http";
 export interface ModuleSectionPlayerDto {
   moduleId: string;
   sectionId: string;
+  moduleName: string;
+  moduleSlug: string;
   sectionMarkdownBody: string;
   sections: ModuleSectionNavItemDto[];
   modulePercentCompleted: number;

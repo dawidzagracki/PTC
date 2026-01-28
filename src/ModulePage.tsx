@@ -25,6 +25,7 @@ import {
   type ModuleSectionPlayerDto,
 } from "./Services/LearningService";
 import { useNavigate, useParams } from "react-router-dom";
+import default_module from "./assets/default_module.png";
 
 let theme = createTheme({
   palette: {
@@ -68,21 +69,42 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme);
 
+const moduleImages = import.meta.glob(
+  ["./assets/modules/*.{png,jpg,jpeg,webp}", "./assets/*.{png,jpg,jpeg,webp}"],
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const moduleImageMap = Object.fromEntries(
+  Object.entries(moduleImages).map(([path, url]) => {
+    const fileName = path.split("/").pop() ?? "";
+    const slug = fileName.replace(/\.[^/.]+$/, "").toLowerCase();
+    return [slug, url];
+  }),
+);
+
+const getModuleImage = (slug?: string | null) =>
+  slug ? moduleImageMap[slug.toLowerCase()] ?? default_module : default_module;
+
 export default function ModulePage() {
   const { moduleId, sectionId } = useParams();
   const navigate = useNavigate();
   const [moduleInfo, setModuleInfo] = useState<ModuleSectionPlayerDto>();
+  const percentCompleted = Math.round(moduleInfo?.modulePercentCompleted ?? 0);
   useEffect(() => {
     fetchModuleDetails();
   }, [moduleId, sectionId]);
 
   async function fetchModuleDetails() {
-    await getModuleSectionPlayer(moduleId ?? "", sectionId ?? "").then(
-      (module) => {
-        setModuleInfo(module);
-        console.log(module);
-      }
-    );
+    try {
+      const module = await getModuleSectionPlayer(
+        moduleId ?? "",
+        sectionId ?? "",
+      );
+      setModuleInfo(module);
+      console.log(module);
+    } catch (error) {
+      console.error("Nie udało się pobrać danych modułu.", error);
+    }
   }
 
   return (
@@ -127,21 +149,24 @@ export default function ModulePage() {
 
             <Stack direction="row" spacing={1} alignItems="center">
               <Box
+                component="img"
+                src={getModuleImage(moduleInfo?.moduleSlug)}
+                alt={moduleInfo?.moduleName ?? "Module"}
                 sx={{
-                  width: 18,
-                  height: 18,
-                  bgcolor: "#9AF80B",
+                  width: 32,
+                  height: 32,
                   borderRadius: "4px",
                   opacity: 0.9,
+                  objectFit: "cover",
                 }}
               />
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography sx={{ fontWeight: 700 }}>
-                    Linux Fundamentals
+                    {moduleInfo?.moduleName ?? " "}
                   </Typography>
                   <Typography sx={{ opacity: 0.6, fontSize: 14, ml: 2 }}>
-                    0%
+                    {percentCompleted}%
                   </Typography>
                 </Box>
 
@@ -159,7 +184,7 @@ export default function ModulePage() {
                     sx={{
                       position: "absolute",
                       inset: 0,
-                      width: "0%",
+                      width: `${percentCompleted}%`,
                       bgcolor: "#9AF80B",
                       borderRadius: 999,
                     }}
