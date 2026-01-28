@@ -26,6 +26,7 @@ import HexagonIcon from "@mui/icons-material/Hexagon";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
 import ExamsPage from "./ExamsPage";
+import { useLocation } from "react-router-dom";
 
 const C = {
   bg: "#0A0F1E",
@@ -541,6 +542,16 @@ function PlanCard({ plan }: { plan: Plan }) {
 
 export default function BillingPage() {
   const [mode, setMode] = React.useState<"annual" | "monthly">("annual");
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const nextMode = (
+      location.state as { billingMode?: "annual" | "monthly" } | null
+    )?.billingMode;
+    if (nextMode) {
+      setMode(nextMode);
+    }
+  }, [location.state]);
 
   return (
     <ThemeProvider theme={theme}>

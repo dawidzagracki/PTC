@@ -18,7 +18,6 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import React, { useEffect, useState } from "react";
 import BoltIcon from "@mui/icons-material/Bolt";
 import FeedIcon from "@mui/icons-material/Feed";
-import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import ControlPointIcon from "@mui/icons-material/ControlPoint";
 import SportsMmaIcon from "@mui/icons-material/SportsMma";
 import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
@@ -45,6 +44,9 @@ import {
 } from "./Services/DashboardService";
 import { useNavigate } from "react-router-dom";
 import default_module from "./assets/default_module.png";
+import cyberchip from "./assets/cyberchip.png";
+import { AuthService } from "./Services/AuthService";
+import type { CurrentUser } from "./Models/CurrentUser";
 // import ArrowCircleLeftIcon from "@mui/icons-material/ArrowCircleLeft";
 
 // Colors & tokens (HTB-like)
@@ -370,6 +372,7 @@ export default function DashboardPage() {
   const [categoryProgress, setCategoryProgress] = useState<
     CategoryProgressDto[]
   >([]);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const hasEnrolledPath = Boolean(paths?.id);
 
   useEffect(() => {
@@ -382,6 +385,7 @@ export default function DashboardPage() {
     fetchPaths();
     fetchModules();
     fetchCategoryProgress();
+    fetchCurrentUser();
   }, [navigate]);
 
   async function fetchPaths() {
@@ -409,6 +413,15 @@ export default function DashboardPage() {
       setCategoryProgress(result);
     } catch (error) {
       console.error("Nie udało się pobrać postępu kategorii.", error);
+    }
+  }
+
+  async function fetchCurrentUser() {
+    try {
+      const user = await AuthService.me();
+      setCurrentUser(user);
+    } catch (error) {
+      console.error("Nie udało się pobrać danych użytkownika.", error);
     }
   }
 
@@ -950,7 +963,12 @@ export default function DashboardPage() {
                 <Stack
                   direction="row"
                   spacing={2}
-                  sx={{ color: C.textDim, mb: 3, mt: 9 }}
+                  sx={{
+                    color: C.textDim,
+                    mb: 3,
+                    mt: 9,
+                    alignItems: "center",
+                  }}
                 >
                   <Box
                     sx={{
@@ -974,9 +992,33 @@ export default function DashboardPage() {
                       borderColor: C.border,
                     }}
                   >
-                    <ViewInArIcon sx={{ mr: 0.5 }} />
-                    <Typography sx={{ mr: 1 }}>20</Typography>
-                    <ControlPointIcon sx={{ color: "white" }} />
+                    <Box
+                      component="img"
+                      src={cyberchip}
+                      alt="CyberChips"
+                      sx={{ width: 32, height: 32, mr: 0.5, ml: -0.5 }}
+                    />
+                    <Typography sx={{ mr: 2 }}>
+                      {currentUser?.cyberChipAmount ?? 0}
+                    </Typography>
+                    <Box
+                      onClick={() =>
+                        navigate("/billing", {
+                          state: { billingMode: "monthly" },
+                        })
+                      }
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                      }}
+                      role="button"
+                      aria-label="Kup CyberChips"
+                    >
+                      <ControlPointIcon
+                        sx={{ color: "white", width: 20, height: 20 }}
+                      />
+                    </Box>
                   </Box>
                   <Box
                     sx={{
@@ -986,9 +1028,11 @@ export default function DashboardPage() {
                       pr: 1,
                     }}
                   >
-                    <LocalActivityIcon sx={{ mr: 0.5 }} />
+                    <LocalActivityIcon sx={{ mr: 0.5, color: C.lime }} />
                     <Typography sx={{ mr: 1 }}>20</Typography>
-                    <ControlPointIcon sx={{ color: "white" }} />
+                    <ControlPointIcon
+                      sx={{ color: "white", width: 20, height: 20 }}
+                    />
                   </Box>
                 </Stack>
 
