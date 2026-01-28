@@ -4,6 +4,7 @@ import {
   Typography,
   Container,
   Button,
+  LinearProgress,
   responsiveFontSizes,
   ThemeProvider,
   CssBaseline,
@@ -160,36 +161,42 @@ export default function ModulePage() {
                   objectFit: "cover",
                 }}
               />
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography sx={{ fontWeight: 700 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 800, fontSize: 15 }}>
                     {moduleInfo?.moduleName ?? " "}
                   </Typography>
-                  <Typography sx={{ opacity: 0.6, fontSize: 14, ml: 2 }}>
+                  <Typography sx={{ color: "primary.main", fontSize: 13.5 }}>
                     {percentCompleted}%
                   </Typography>
                 </Box>
 
-                <Box
+                <LinearProgress
+                  variant="determinate"
+                  value={percentCompleted}
                   sx={{
-                    width: "100%",
+                    width: 240,
                     height: 6,
-                    bgcolor: "transparent",
-                    border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: 999,
-                    position: "relative",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      inset: 0,
-                      width: `${percentCompleted}%`,
-                      bgcolor: "#9AF80B",
+                    overflow: "hidden",
+                    backgroundColor: "#131a2a",
+                    backgroundImage:
+                      "repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0 5px, rgba(255,255,255,0.06) 5px 10px)",
+                    backgroundSize: "14px 14px",
+                    "& .MuiLinearProgress-bar": {
                       borderRadius: 999,
-                    }}
-                  />
-                </Box>
+                      backgroundColor: "#9AF80B",
+                      backgroundImage: "none",
+                    },
+                  }}
+                />
               </Box>
             </Stack>
 
