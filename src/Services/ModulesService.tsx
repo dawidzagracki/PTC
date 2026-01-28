@@ -84,6 +84,7 @@ export interface SimpleModuleDetails {
   currentSectionOrderIndex?: number | null;
   isStarted: boolean;
   userStatus?: string | null;
+  isFavourite: boolean;
 }
 
 export interface SimpleModuleSection {

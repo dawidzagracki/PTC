@@ -17,11 +17,13 @@ import {
   Tab,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   getModuleDetailsById,
   unlockModule,
+  toggleModuleFavourite,
   type SimpleModuleDetails,
 } from "./Services/ModulesService";
 import SubNavMenu from "./Common/Navigation/SubNavMenu";
@@ -99,6 +101,7 @@ export default function ModuleOverviewPage() {
   );
   const [tabValue, setTabValue] = useState(0);
   const hasProgress = (moduleInfo?.userPercentCompleted ?? 0) > 0;
+  const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
     fetchModuleDetails();
@@ -108,6 +111,7 @@ export default function ModuleOverviewPage() {
     try {
       const module = await getModuleDetailsById(id ?? "");
       setModuleInfo(module);
+      setIsFavourite(module.isFavourite);
       console.log(module);
     } catch {
       setAlertSeverity("error");
@@ -168,6 +172,18 @@ export default function ModuleOverviewPage() {
       },
       disabled: false,
     };
+  };
+
+  const handleFavouriteToggle = async () => {
+    if (!id) return;
+    try {
+      const newValue = await toggleModuleFavourite(id);
+      setIsFavourite(newValue);
+    } catch {
+      setAlertSeverity("error");
+      setAlertMessage("Nie udało się zaktualizować ulubionego modułu.");
+      setAlertOpen(true);
+    }
   };
 
   return (
@@ -318,8 +334,17 @@ export default function ModuleOverviewPage() {
                   </Button>
                 )}
 
-                <Box sx={{ ml: 3, mt: 1, cursor: "pointer" }}>
-                  <FavoriteBorderIcon />
+                <Box
+                  sx={{ ml: 3, mt: 1, cursor: "pointer" }}
+                  onClick={handleFavouriteToggle}
+                  role="button"
+                  aria-pressed={isFavourite}
+                >
+                  {isFavourite ? (
+                    <FavoriteIcon sx={{ color: "#FF1744" }} />
+                  ) : (
+                    <FavoriteBorderIcon />
+                  )}
                 </Box>
               </Box>
             </Box>
